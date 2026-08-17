@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>RiderTracker Live & GPX</title>
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  
+  <!-- Google Fonts & Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-dark: #0f172a;
+      --card-bg: #1e293b;
+      --accent-blue: #38bdf8;
+      --accent-green: #22c55e;
+      --accent-orange: #f97316;
+      --accent-red: #ef4444;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #334155;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Header */
+    header {
+      background-color: rgba(30, 41, 59, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+      z-index: 1000;
+    }
+
+    header h1 {
+      font-size: 1.2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #38bdf8, #818cf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge-live {
+      background-color: rgba(34, 197, 94, 0.2);
+      color: var(--accent-green);
+      border: 1px solid var(--accent-green);
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.4; }
+      100% { opacity: 1; }
+    }
+
+    /* Main Container */
+    main {
+      flex: 1;
+      position: relative;
+      overflow-y: auto;
+    }
+
+    .tab-content {
+      display: none;
+      height: 100%;
+      padding: 16px;
+    }
+
+    .tab-content.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Navigation Bar */
+    nav {
+      background-color: #1e293b;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 0;
+      z-index: 1000;
+    }
+
+    .nav-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      flex: 1;
+      transition: color 0.2s;
+    }
+
+    .nav-btn i {
+      font-size: 1.2rem;
+    }
+
+    .nav-btn.active {
+      color: var(--accent-blue);
+    }
+
+    /* Forms & Cards */
+    .card {
+      background-color: var(--card-bg);
+      border-radius: 16px;
+      padding: 20px;
+      border: 1px solid var(--border-color);
+      margin-bottom: 16px;
+    }
+
+    .card h2 {
+      font-size: 1.1rem;
+      margin-bottom: 16px;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-control {
+      width: 100%;
+      background-color: #0f172a;
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-control:focus {
+      border-color: var(--accent-blue);
+    }
+
+    .form-row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .form-row .form-group {
+      flex: 1;
+    }
+
+    /* Buttons */
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: transform 0.1s, background-color 0.2s;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #0284c7, #38bdf8);
+      color: #fff;
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, #dc2626, #ef4444);
+      color: #fff;
+    }
+
+    .btn-secondary {
+      background-color: #334155;
+      color: var(--text-main);
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .stat-box {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .stat-value {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-top: 4px;
+    }
+
+    .stat-value span {
+      font-size: 0.8rem;
+      font-weight: 400;
+      color: var(--text-muted);
+    }
+
+    .map-container {
+      flex: 1;
+      width: 100%;
+      min-height: 250px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+      margin-bottom: 16px;
+    }
+
+    #active-map, #live-cloud-map {
+      height: 100%;
+      width: 100%;
+      background-color: #0f172a;
+    }
+
+    .notice-box {
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 0.8rem;
+      color: var(--accent-blue);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .history-item {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .history-info h3 {
+      font-size: 0.95rem;
+      color: var(--accent-blue);
+    }
+
+    .history-info p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .color-picker-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .color-picker-wrapper input[type="color"] {
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      background: none;
+    }
+  </style>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <h1><i class="fa-solid fa-water"></i> RiderTracker</h1>
+    <span class="badge-live" id="live-indicator"><i class="fa-solid fa-circle"></i> OPTIMISÉ 5MIN</span>
+  </header>
+
+  <!-- Main Body Content -->
+  <main>
+
+    <!-- TAB 1: NOUVELLE SESSION -->
+    <div id="tab-new-session" class="tab-content active">
+      <div class="card">
+        <h2><i class="fa-solid fa-play" style="color: var(--accent-green);"></i> Démarrer une session</h2>
+        
+        <div class="form-group">
+          <label>Discipline / Sport</label>
+          <select id="input-sport" class="form-control">
+            <option value="Windsurf">Windsurf</option>
+            <option value="Wingfoil">Wingfoil</option>
+            <option value="Kitesurf">Kitesurf</option>
+            <option value="Windfoil">Windfoil</option>
+            <option value="SUP / Paddle">SUP / Paddle</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Planche (Marque)</label>
+            <input type="text" id="board-brand" class="form-control" placeholder="ex: Fanatic">
+          </div>
+          <div class="form-group">
+            <label>Modèle & Vol (L)</label>
+            <input type="text" id="board-model" class="form-control" placeholder="ex: Falcon 100L">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Voile / Aile (Marque)</label>
+            <input type="text" id="sail-brand" class="form-control" placeholder="ex: Duotone">
+          </div>
+          <div class="form-group">
+            <label>Taille (m²)</label>
+            <input type="text" id="sail-size" class="form-control" placeholder="ex: 7.0">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Couleur principale</label>
+            <div class="color-picker-wrapper">
+              <input type="color" id="sail-color" value="#f97316">
+              <span style="font-size: 0.8rem; color: var(--text-muted);">Repère visuel live</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Vent estimé (kts)</label>
+            <input type="number" id="input-wind-speed" class="form-control" placeholder="ex: 22">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Photo du matos (optionnel)</label>
+          <input type="file" id="input-sail-photo" accept="image/*" class="form-control">
+        </div>
+
+        <button class="btn btn-primary" onclick="startSession()">
+          <i class="fa-solid fa-satellite-dish"></i> LANCER LE TRACKING
+        </button>
+      </div>
+    </div>
+
+    <!-- TAB 2: SESSION EN COURS -->
+    <div id="tab-active-session" class="tab-content">
+      <div class="notice-box">
+        <i class="fa-solid fa-bolt"></i>
+        <span>Enregistrement GPS continu local. Envoi Cloud toutes les 5 min (Économie de batterie).</span>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-label">Vitesse Inst.</div>
+          <div class="stat-value" id="stat-speed">0.0 <span>km/h</span></div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Vmax 3s</div>
+          <div class="stat-value" id="stat-max-speed" style="color: var(--accent-orange);">0.0 <span>km/h</span></div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Distance</div>
+          <div class="stat-value" id="stat-distance">0.00 <span>km</span></div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Durée</div>
+          <div class="stat-value" id="stat-duration" style="font-size: 1.3rem;">00:00:00</div>
+        </div>
+      </div>
+
+      <div class="map-container">
+        <div id="active-map"></div>
+      </div>
+
+      <button class="btn btn-danger" onclick="stopSession()">
+        <i class="fa-solid fa-square"></i> FINIR & EXPORTER GPX
+      </button>
+    </div>
+
+    <!-- TAB 3: CARTE EN DIRECT (SOL) -->
+    <div id="tab-live-map" class="tab-content">
+      <div style="margin-bottom: 10px;">
+        <p style="font-size: 0.85rem; color: var(--text-muted);">
+          <i class="fa-solid fa-users" style="color: var(--accent-blue);"></i> Riders en direct sur l'eau (Mise à jour Cloud / 5 min)
+        </p>
+      </div>
+      <div class="map-container" style="height: calc(100% - 40px);">
+        <div id="live-cloud-map"></div>
+      </div>
+    </div>
+
+    <!-- TAB 4: HISTORIQUE -->
+    <div id="tab-history" class="tab-content">
+      <div class="card">
+        <h2><i class="fa-solid fa-clock-rotate-left"></i> Sessions enregistrées</h2>
+        <div id="history-list">
+          <p style="color: var(--text-muted); font-size: 0.85rem;">Aucune session enregistrée pour le moment.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 5: PROFIL / CONFIG FIREBASE -->
+    <div id="tab-profile" class="tab-content">
+      <div class="card">
+        <h2><i class="fa-solid fa-user"></i> Profil Rider</h2>
+        <div class="form-group">
+          <label>Pseudo / Nom</label>
+          <input type="text" id="profile-pseudo" class="form-control" placeholder="Rider Anonyme">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Poids (kg)</label>
+            <input type="number" id="profile-weight" class="form-control" placeholder="75">
+          </div>
+          <div class="form-group">
+            <label>Taille (cm)</label>
+            <input type="number" id="profile-height" class="form-control" placeholder="180">
+          </div>
+        </div>
+        <button class="btn btn-secondary" onclick="saveProfile()">
+          <i class="fa-solid fa-floppy-disk"></i> Enregistrer mon profil
+        </button>
+      </div>
+
+      <div class="card">
+        <h2><i class="fa-solid fa-fire" style="color: #f97316;"></i> Configuration Firebase</h2>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">
+          Entrez vos identifiants Firebase Realtime Database pour partager votre position live avec le sol.
+        </p>
+        <div class="form-group">
+          <label>Database URL</label>
+          <input type="text" id="firebase-url" class="form-control" placeholder="https://votre-projet-default-rtdb.firebaseio.com">
+        </div>
+        <div class="form-group">
+          <label>API Key</label>
+          <input type="text" id="firebase-apikey" class="form-control" placeholder="AIzaSy...">
+        </div>
+        <button class="btn btn-primary" onclick="initFirebase()">
+          <i class="fa-solid fa-plug"></i> Connecter Firebase
+        </button>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Navigation Bar -->
+  <nav>
+    <button class="nav-btn active" onclick="switchTab('tab-new-session', this)">
+      <i class="fa-solid fa-plus-circle"></i>
+      <span>Session</span>
+    </button>
+    <button class="nav-btn" onclick="switchTab('tab-active-session', this)">
+      <i class="fa-solid fa-gauge-high"></i>
+      <span>Live Rider</span>
+    </button>
+    <button class="nav-btn" onclick="switchTab('tab-live-map', this)">
+      <i class="fa-solid fa-map-location-dot"></i>
+      <span>Carte Sol</span>
+    </button>
+    <button class="nav-btn" onclick="switchTab('tab-history', this)">
+      <i class="fa-solid fa-list"></i>
+      <span>Historique</span>
+    </button>
+    <button class="nav-btn" onclick="switchTab('tab-profile', this)">
+      <i class="fa-solid fa-gear"></i>
+      <span>Profil</span>
+    </button>
+  </nav>
+
+  <!-- JavaScript Logic -->
+  <script>
+    // --- ÉTAT GLOBAL DE L'APPLICATION ---
+    let activeSession = null;
+    let watchPositionId = null;
+    let cloudSyncTimer = null;
+    const SYNC_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes d'intervalle cloud
+
+    let sessionMap = null;
+    let liveCloudMap = null;
+    let currentPolylineGroup = null;
+    let activeRidersMarkers = {};
+    let sailPhotoBase64 = "";
+
+    let profile = { pseudo: 'Rider Anonyme', weight: '', height: '' };
+    let firebaseConfig = { databaseURL: '', apiKey: '' };
+    let dbRef = null;
+
+    // --- INITIALISATION ---
+    window.addEventListener('DOMContentLoaded', () => {
+      loadProfile();
+      loadFirebaseConfig();
+      initMaps();
+      renderHistory();
+
+      document.getElementById('input-sail-photo').addEventListener('change', handleImageUpload);
+    });
+
+    // --- ONGLETS ---
+    function switchTab(tabId, btnElement) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+
+      document.getElementById(tabId).classList.add('active');
+      if (btnElement) btnElement.classList.add('active');
+
+      setTimeout(() => {
+        if (sessionMap) sessionMap.invalidateSize();
+        if (liveCloudMap) liveCloudMap.invalidateSize();
+      }, 200);
+    }
+
+    // --- INITIALISATION CARTES ---
+    function initMaps() {
+      sessionMap = L.map('active-map').setView([43.3, 5.0], 13);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
+      }).addTo(sessionMap);
+      currentPolylineGroup = L.layerGroup().addTo(sessionMap);
+
+      liveCloudMap = L.map('live-cloud-map').setView([43.3, 5.0], 12);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
+      }).addTo(liveCloudMap);
+    }
+
+    // --- PROFIL & CONFIG FIREBASE ---
+    function saveProfile() {
+      profile.pseudo = document.getElementById('profile-pseudo').value || 'Rider Anonyme';
+      profile.weight = document.getElementById('profile-weight').value || '';
+      profile.height = document.getElementById('profile-height').value || '';
+      localStorage.setItem('rider_profile', JSON.stringify(profile));
+      alert('Profil enregistré !');
+    }
+
+    function loadProfile() {
+      const saved = localStorage.getItem('rider_profile');
+      if (saved) {
+        profile = JSON.parse(saved);
+        document.getElementById('profile-pseudo').value = profile.pseudo || '';
+        document.getElementById('profile-weight').value = profile.weight || '';
+        document.getElementById('profile-height').value = profile.height || '';
+      }
+    }
+
+    function loadFirebaseConfig() {
+      const saved = localStorage.getItem('firebase_config');
+      if (saved) {
+        firebaseConfig = JSON.parse(saved);
+        document.getElementById('firebase-url').value = firebaseConfig.databaseURL || '';
+        document.getElementById('firebase-apikey').value = firebaseConfig.apiKey || '';
+        if (firebaseConfig.databaseURL) initFirebase(true);
+      }
+    }
+
+    function initFirebase(silent = false) {
+      const dbUrl = document.getElementById('firebase-url').value.trim();
+      const apiKey = document.getElementById('firebase-apikey').value.trim();
+
+      if (!dbUrl) {
+        if (!silent) alert("Veuillez renseigner l'URL Realtime Database.");
+        return;
+      }
+
+      firebaseConfig = { databaseURL: dbUrl, apiKey: apiKey };
+      localStorage.setItem('firebase_config', JSON.stringify(firebaseConfig));
+
+      try {
+        if (!firebase.apps.length) {
+          firebase.initializeApp(firebaseConfig);
+        }
+        dbRef = firebase.database().ref('live_sessions');
+        listenToLiveSessions();
+        if (!silent) alert('Firebase connecté avec succès !');
+      } catch (e) {
+        console.error("Erreur Firebase:", e);
+        if (!silent) alert("Erreur d'initialisation Firebase.");
+      }
+    }
+
+    function handleImageUpload(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onloadend = () => { sailPhotoBase64 = reader.result; };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // --- DÉMARRAGE DE LA SESSION ---
+    function startSession() {
+      const pseudo = profile.pseudo || document.getElementById('profile-pseudo').value || 'Rider Anonyme';
+
+      activeSession = {
+        id: 'sess_' + Date.now(),
+        startTime: new Date().getTime(),
+        rider: { pseudo, weight: profile.weight, height: profile.height },
+        sport: document.getElementById('input-sport').value,
+        board: {
+          brand: document.getElementById('board-brand').value || '-',
+          model: document.getElementById('board-model').value || '-'
+        },
+        sail: {
+          brand: document.getElementById('sail-brand').value || '-',
+          size: document.getElementById('sail-size').value || '-',
+          color: document.getElementById('sail-color').value,
+          photo: sailPhotoBase64
+        },
+        windSpeed: document.getElementById('input-wind-speed').value || '-',
+        points: [],
+        totalDistance: 0,
+        maxSpeed3s: 0,
+        speedsAbove5: []
+      };
+
+      currentPolylineGroup.clearLayers();
+      const navBtnLive = document.querySelectorAll('.nav-btn')[1];
+      switchTab('tab-active-session', navBtnLive);
+
+      if ('geolocation' in navigator) {
+        watchPositionId = navigator.geolocation.watchPosition(
+          handleGPSUpdate,
+          handleGPSError,
+          { enableHighAccuracy: true, maximumAge: 1000, timeout: 5000 }
+        );
+      } else {
+        alert('Géolocalisation non supportée sur cet appareil.');
+      }
+
+      // Synchronisation initiale + Timer de 5 minutes
+      syncSessionToCloud();
+      
+      if (cloudSyncTimer) clearInterval(cloudSyncTimer);
+      cloudSyncTimer = setInterval(() => {
+        syncSessionToCloud();
+        console.log('Sync Cloud effectuée (Intervalle 5 min)');
+      }, SYNC_INTERVAL_MS);
+    }
+
+    // --- SIGNAL GPS LOCAL ---
+    function handleGPSUpdate(pos) {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      const timestamp = pos.timestamp || Date.now();
+      let rawSpeed = pos.coords.speed ? (pos.coords.speed * 3.6) : 0; // km/h
+
+      const point = { lat, lng, time: timestamp, speed: rawSpeed };
+
+      if (activeSession.points.length > 0) {
+        const lastPt = activeSession.points[activeSession.points.length - 1];
+        const dist = calculateHaversineDistance(lastPt.lat, lastPt.lng, lat, lng);
+        const timeDiff = (timestamp - lastPt.time) / 1000;
+
+        if (timeDiff > 0 && (!pos.coords.speed || pos.coords.speed === 0)) {
+          rawSpeed = (dist / timeDiff) * 3600;
+          point.speed = rawSpeed;
+        }
+
+        activeSession.totalDistance += dist;
+
+        const segmentColor = getSpeedColor(point.speed);
+        L.polyline([[lastPt.lat, lastPt.lng], [lat, lng]], { color: segmentColor, weight: 5 }).addTo(currentPolylineGroup);
+      }
+
+      activeSession.points.push(point);
+      sessionMap.panTo([lat, lng]);
+
+      if (point.speed >= 5) activeSession.speedsAbove5.push(point.speed);
+
+      calculateMaxSpeed3s();
+      updateActiveSessionUI(point.speed);
+    }
+
+    function handleGPSError(err) {
+      console.warn("GPS Warning:", err.message);
+    }
+
+    function calculateMaxSpeed3s() {
+      const pts = activeSession.points;
+      if (pts.length < 2) return;
+
+      for (let i = 0; i < pts.length; i++) {
+        let windowDist = 0;
+        let j = i;
+        while (j < pts.length && (pts[j].time - pts[i].time) <= 3000) {
+          if (j > i) {
+            windowDist += calculateHaversineDistance(pts[j-1].lat, pts[j-1].lng, pts[j].lat, pts[j].lng);
+          }
+          j++;
+        }
+        const timeSpanSec = (pts[Math.min(j, pts.length - 1)].time - pts[i].time) / 1000;
+        if (timeSpanSec >= 2.5) {
+          const avgSpeed3s = (windowDist / timeSpanSec) * 3600;
+          if (avgSpeed3s > activeSession.maxSpeed3s) {
+            activeSession.maxSpeed3s = avgSpeed3s;
+          }
+        }
+      }
+    }
+
+    function updateActiveSessionUI(currentSpeed) {
+      document.getElementById('stat-speed').innerText = currentSpeed.toFixed(1);
+      document.getElementById('stat-max-speed').innerText = activeSession.maxSpeed3s.toFixed(1);
+      document.getElementById('stat-distance').innerText = activeSession.totalDistance.toFixed(2);
+
+      const elapsedMs = Date.now() - activeSession.startTime;
+      const hrs = Math.floor(elapsedMs / 3600000).toString().padStart(2, '0');
+      const mins = Math.floor((elapsedMs % 3600000) / 60000).toString().padStart(2, '0');
+      const secs = Math.floor((elapsedMs % 60000) / 1000).toString().padStart(2, '0');
+      document.getElementById('stat-duration').innerText = `${hrs}:${mins}:${secs}`;
+    }
+
+    // --- CLOUD SYNC FIREBASE (TOUTES LES 5 MIN) ---
+    function syncSessionToCloud() {
+      if (!dbRef || !activeSession) return;
+
+      const lastPoint = activeSession.points.length > 0 ? activeSession.points[activeSession.points.length - 1] : null;
+
+      const cloudData = {
+        id: activeSession.id,
+        rider: activeSession.rider,
+        sport: activeSession.sport,
+        sail: activeSession.sail,
+        lastUpdated: Date.now(),
+        lastPoint: lastPoint,
+        maxSpeed3s: activeSession.maxSpeed3s,
+        totalDistance: activeSession.totalDistance
+      };
+
+      dbRef.child(activeSession.id).set(cloudData);
+    }
+
+    function removeSessionFromCloud(sessionId) {
+      if (dbRef && sessionId) {
+        dbRef.child(sessionId).remove();
+      }
+    }
+
+    function listenToLiveSessions() {
+      if (!dbRef) return;
+
+      dbRef.on('value', (snapshot) => {
+        const data = snapshot.val() || {};
+
+        Object.keys(activeRidersMarkers).forEach(id => {
+          if (!data[id]) {
+            liveCloudMap.removeLayer(activeRidersMarkers[id]);
+            delete activeRidersMarkers[id];
+          }
+        });
+
+        Object.values(data).forEach(riderSess => {
+          if (!riderSess.lastPoint) return;
+
+          const lat = riderSess.lastPoint.lat;
+          const lng = riderSess.lastPoint.lng;
+          const color = riderSess.sail?.color || '#38bdf8';
+
+          const customIcon = L.divIcon({
+            className: 'custom-rider-icon',
+            html: `<div style="background-color:${color}; width:24px; height:24px; border-radius:50%; border:3px solid white; box-shadow:0 0 8px rgba(0,0,0,0.5);"></div>`,
+            iconSize: [24, 24],
+            iconAnchor: [12, 12]
+          });
+
+          const popupContent = `
+            <div style="color: #0f172a; font-family: sans-serif;">
+              <strong>${riderSess.rider?.pseudo || 'Rider'}</strong> (${riderSess.sport})<br/>
+              <b>Vmax 3s:</b> ${riderSess.maxSpeed3s ? riderSess.maxSpeed3s.toFixed(1) : 0} km/h<br/>
+              <b>Distance:</b> ${riderSess.totalDistance ? riderSess.totalDistance.toFixed(2) : 0} km<br/>
+              ${riderSess.sail?.photo ? `<img src="${riderSess.sail.photo}" style="width:100%; border-radius:8px; margin-top:6px; max-height:120px; object-fit:cover;"/>` : ''}
+              <small style="color:#64748b;">Dernier envoi: ${new Date(riderSess.lastUpdated).toLocaleTimeString()}</small>
+            </div>
+          `;
+
+          if (activeRidersMarkers[riderSess.id]) {
+            activeRidersMarkers[riderSess.id].setLatLng([lat, lng]);
+            activeRidersMarkers[riderSess.id].getPopup().setContent(popupContent);
+          } else {
+            const marker = L.marker([lat, lng], { icon: customIcon }).addTo(liveCloudMap);
+            marker.bindPopup(popupContent);
+            activeRidersMarkers[riderSess.id] = marker;
+          }
+        });
+      });
+    }
+
+    // --- FIN DE SESSION & EXPORT GPX ---
+    function stopSession() {
+      if (watchPositionId !== null) navigator.geolocation.clearWatch(watchPositionId);
+
+      if (cloudSyncTimer) {
+        clearInterval(cloudSyncTimer);
+        cloudSyncTimer = null;
+      }
+
+      const endTime = new Date();
+      activeSession.endTime = endTime.getTime();
+      const durationMs = endTime.getTime() - activeSession.startTime;
+      const hrs = Math.floor(durationMs / 3600000).toString().padStart(2, '0');
+      const mins = Math.floor((durationMs % 3600000) / 60000).toString().padStart(2, '0');
+      const secs = Math.floor((durationMs % 60000) / 1000).toString().padStart(2, '0');
+      activeSession.durationFormatted = `${hrs}:${mins}:${secs}`;
+
+      saveSessionToHistory(activeSession);
+      removeSessionFromCloud(activeSession.id);
+
+      const gpxContent = generateGPX(activeSession);
+      downloadGPX(gpxContent, `session_${activeSession.sport}_${Date.now()}.gpx`);
+
+      alert(`Session terminée !\n\nDurée : ${activeSession.durationFormatted}\nDistance : ${activeSession.totalDistance.toFixed(2)} km\nVitesse Max (3s) : ${activeSession.maxSpeed3s.toFixed(1)} km/h\nFichier GPX téléchargé.`);
+
+      activeSession = null;
+      renderHistory();
+      switchTab('tab-history', document.querySelectorAll('.nav-btn')[3]);
+    }
+
+    function saveSessionToHistory(session) {
+      let history = JSON.parse(localStorage.getItem('rider_history') || '[]');
+      history.unshift(session);
+      localStorage.setItem('rider_history', JSON.stringify(history));
+    }
+
+    function renderHistory() {
+      const history = JSON.parse(localStorage.getItem('rider_history') || '[]');
+      const container = document.getElementById('history-list');
+
+      if (history.length === 0) {
+        container.innerHTML = `<p style="color: var(--text-muted); font-size: 0.85rem;">Aucune session enregistrée pour le moment.</p>`;
+        return;
+      }
+
+      container.innerHTML = history.map((s, idx) => `
+        <div class="history-item">
+          <div class="history-info">
+            <h3>${s.sport} - ${new Date(s.startTime).toLocaleDateString()}</h3>
+            <p><i class="fa-solid fa-gauge"></i> Vmax 3s: <b>${s.maxSpeed3s ? s.maxSpeed3s.toFixed(1) : 0} km/h</b> | <i class="fa-solid fa-route"></i> ${s.totalDistance.toFixed(2)} km</p>
+            <p><i class="fa-solid fa-stopwatch"></i> Durée: ${s.durationFormatted || '-'}</p>
+          </div>
+          <button class="btn btn-secondary" style="width: auto; padding: 8px 12px; font-size: 0.8rem;" onclick="reDownloadGPX(${idx})">
+            <i class="fa-solid fa-download"></i> GPX
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function reDownloadGPX(index) {
+      const history = JSON.parse(localStorage.getItem('rider_history') || '[]');
+      const session = history[index];
+      if (session) {
+        const gpx = generateGPX(session);
+        downloadGPX(gpx, `session_${session.sport}_${session.startTime}.gpx`);
+      }
+    }
+
+    function generateGPX(session) {
+      let trkpts = session.points.map(pt => {
+        const isoTime = new Date(pt.time).toISOString();
+        return `      <trkpt lat="${pt.lat}" lon="${pt.lng}">
+        <time>${isoTime}</time>
+        <extensions>
+          <speed>${(pt.speed / 3.6).toFixed(2)}</speed>
+        </extensions>
+      </trkpt>`;
+      }).join('\n');
+
+      return `<?xml version="1.1" encoding="UTF-8"?>
+<gpx version="1.1" creator="RiderTracker" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata>
+    <name>Session ${session.sport} - ${session.rider?.pseudo || 'Rider'}</name>
+    <time>${new Date(session.startTime).toISOString()}</time>
+  </metadata>
+  <trk>
+    <name>${session.sport} Session</name>
+    <trkseg>
+${trkpts}
+    </trkseg>
+  </trk>
+</gpx>`;
+    }
+
+    function downloadGPX(content, filename) {
+      const blob = new Blob([content], { type: 'application/gpx+xml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    }
+
+    function getSpeedColor(speed) {
+      if (speed < 10) return '#38bdf8';
+      if (speed < 25) return '#22c55e';
+      if (speed < 40) return '#f97316';
+      return '#ef4444';
+    }
+  </script>
+</body>
+</html>
