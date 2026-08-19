@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>RiderTracker Live & GPX</title>
   
   <!-- Leaflet CSS -->
@@ -40,10 +40,12 @@
       display: flex;
       flex-direction: column;
       height: 100vh;
+      height: 100dvh;
       overflow: hidden;
     }
 
     header {
+      flex-shrink: 0;
       background-color: rgba(30, 41, 59, 0.95);
       backdrop-filter: blur(10px);
       padding: 12px 16px;
@@ -100,13 +102,15 @@
     }
 
     nav {
+      flex-shrink: 0;
+      min-height: 60px;
       background-color: #1e293b;
       border-top: 1px solid var(--border-color);
       display: flex;
       justify-content: space-around;
-      padding: 6px 0;
+      align-items: center;
+      padding: 6px 0 max(6px, env(safe-area-inset-bottom)) 0;
       z-index: 1000;
-      overflow-x: auto;
     }
 
     .nav-btn {
@@ -666,7 +670,20 @@
       const file = e.target.files[0];
       if (file) {
         const reader = new FileReader();
-        reader.onloadend = () => { sailPhotoBase64 = reader.result; };
+        reader.onloadend = () => { 
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 400;
+            const scaleSize = MAX_WIDTH / img.width;
+            canvas.width = MAX_WIDTH;
+            canvas.height = img.height * scaleSize;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            sailPhotoBase64 = canvas.toDataURL('image/jpeg', 0.7);
+          };
+          img.src = reader.result;
+        };
         reader.readAsDataURL(file);
       }
     }
@@ -793,7 +810,9 @@
         id: activeSession.id,
         rider: activeSession.rider,
         sport: activeSession.sport,
+        board: activeSession.board,
         sail: activeSession.sail,
+        windSpeed: activeSession.windSpeed,
         lastUpdated: Date.now(),
         lastPoint: lastPoint,
         maxSpeed3s: activeSession.maxSpeed3s,
@@ -836,13 +855,21 @@
             iconAnchor: [12, 12]
           });
 
+          const boardInfo = (riderSess.board?.brand && riderSess.board.brand !== '-') ? `${riderSess.board.brand} ${riderSess.board.model !== '-' ? riderSess.board.model : ''}`.trim() : '';
+          const sailInfo = (riderSess.sail?.brand && riderSess.sail.brand !== '-') ? `${riderSess.sail.brand}` : '';
+          const sailSizeInfo = (riderSess.sail?.size && riderSess.sail.size !== '-') ? `${riderSess.sail.size} m²` : '';
+          const fullSailText = [sailInfo, sailSizeInfo].filter(Boolean).join(' ');
+
           const popupContent = `
-            <div style="color: #0f172a; font-family: sans-serif;">
-              <strong>${riderSess.rider?.pseudo || 'Rider'}</strong> (${riderSess.sport})<br/>
-              <b>Vmax 3s:</b> ${riderSess.maxSpeed3s ? riderSess.maxSpeed3s.toFixed(1) : 0} km/h<br/>
-              <b>Distance:</b> ${riderSess.totalDistance ? riderSess.totalDistance.toFixed(2) : 0} km<br/>
-              ${riderSess.sail?.photo ? `<img src="${riderSess.sail.photo}" style="width:100%; border-radius:8px; margin-top:6px; max-height:120px; object-fit:cover;"/>` : ''}
-              <small style="color:#64748b;">Mise à jour: ${new Date(riderSess.lastUpdated).toLocaleTimeString()}</small>
+            <div style="color: #0f172a; font-family: sans-serif; font-size: 12px; line-height: 1.4;">
+              <strong style="font-size: 14px; color: #0284c7;">${riderSess.rider?.pseudo || 'Rider'}</strong> (${riderSess.sport || 'Ride'})<br/>
+              ${boardInfo ? `<b>Planche :</b> ${boardInfo}<br/>` : ''}
+              ${fullSailText ? `<b>Voile / Aile :</b> ${fullSailText}<br/>` : ''}
+              ${(riderSess.windSpeed && riderSess.windSpeed !== '-') ? `<b>Vent estimé :</b> ${riderSess.windSpeed} kts<br/>` : ''}
+              <b>Vmax 3s :</b> ${riderSess.maxSpeed3s ? riderSess.maxSpeed3s.toFixed(1) : 0} km/h<br/>
+              <b>Distance :</b> ${riderSess.totalDistance ? riderSess.totalDistance.toFixed(2) : 0} km<br/>
+              ${riderSess.sail?.photo ? `<img src="${riderSess.sail.photo}" style="width:100%; border-radius:8px; margin-top:6px; max-height:120px; object-fit:cover; display:block;"/>` : ''}
+              <div style="color:#64748b; font-size: 10px; margin-top:4px;">Maj : ${new Date(riderSess.lastUpdated).toLocaleTimeString()}</div>
             </div>
           `;
 
