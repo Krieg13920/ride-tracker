@@ -120,7 +120,7 @@
       font-size: 0.65rem;
       font-weight: 600;
       cursor: pointer;
-      min-width: 55px;
+      min-width: 50px;
       flex: 1;
       transition: color 0.2s;
     }
@@ -383,7 +383,7 @@
     <div id="tab-active-session" class="tab-content">
       <div class="notice-box">
         <i class="fa-solid fa-shield-halved"></i>
-        <span>Tracking en tâche de fond actif. Tu peux verrouiller ton écran avec le bouton physique du téléphone.</span>
+        <span>Tracking en tâche de fond actif. Tu peux verrouiller ton écran.</span>
       </div>
 
       <div class="stats-grid">
@@ -486,7 +486,7 @@
           <i class="fa-solid fa-rotate"></i> Rafraîchir les profils
         </button>
         <div id="admin-users-list">
-          <p style="font-size: 0.85rem; color: var(--text-muted);">Chargement des données...</p>
+          <p style="font-size: 0.85rem; color: var(--text-muted);">Cliquez sur « Rafraîchir les profils ».</p>
         </div>
       </div>
     </div>
@@ -523,14 +523,12 @@
 
   <!-- JavaScript Logic -->
   <script>
-    // Code PIN Administrateur
     const ADMIN_PIN = "4321";
     let isAdminUnlocked = false;
 
-    // Config Firebase globale verrouillée
     const DEFAULT_FIREBASE_CONFIG = {
-      databaseURL: "https://ridertracker-live-default-rtdb.firebaseio.com",
-      apiKey: "AIzaSyDEFAULT_GLOBAL_KEY_RIDERTRACKER"
+      databaseURL: "https://ridertracker-v0-default-rtdb.europe-west1.firebasedatabase.app",
+      apiKey: "AIzaSyDvJ6S9eTeRFs5n12yYS5gWbfZR5JcurCs"
     };
 
     let activeSession = null;
@@ -544,7 +542,6 @@
     let activeRidersMarkers = {};
     let sailPhotoBase64 = "";
 
-    // Piste audio silencieuse pour empêcher le système de suspendre le GPS écran verrouillé
     const silentAudio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
     silentAudio.loop = true;
 
@@ -554,11 +551,13 @@
     window.addEventListener('DOMContentLoaded', () => {
       setupDefaultFirebaseInputs();
       loadProfile();
-      initFirebaseAuto();
-      initMaps();
-      renderHistory();
+      
+      try { initFirebaseAuto(); } catch(e) { console.warn("Firebase Init Exception:", e); }
+      try { initMaps(); } catch(e) { console.warn("Maps Init Exception:", e); }
+      try { renderHistory(); } catch(e) { console.warn("History Init Exception:", e); }
 
-      document.getElementById('input-sail-photo').addEventListener('change', handleImageUpload);
+      const photoInput = document.getElementById('input-sail-photo');
+      if (photoInput) photoInput.addEventListener('change', handleImageUpload);
     });
 
     function setupDefaultFirebaseInputs() {
@@ -567,7 +566,6 @@
     }
 
     function switchTab(tabId, btnElement) {
-      // Protection par code PIN pour l'onglet Admin
       if (tabId === 'tab-admin' && !isAdminUnlocked) {
         const code = prompt("Entrez le code administrateur :");
         if (code !== ADMIN_PIN) {
@@ -580,8 +578,17 @@
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
 
-      document.getElementById(tabId).classList.add('active');
-      if (btnElement) btnElement.classList.add('active');
+      const targetTab = document.getElementById(tabId);
+      if (targetTab) targetTab.classList.add('active');
+
+      if (btnElement) {
+        btnElement.classList.add('active');
+      } else {
+        const allBtns = document.querySelectorAll('.nav-btn');
+        const tabNames = ['tab-new-session', 'tab-active-session', 'tab-live-map', 'tab-history', 'tab-profile', 'tab-admin'];
+        const idx = tabNames.indexOf(tabId);
+        if (idx !== -1 && allBtns[idx]) allBtns[idx].classList.add('active');
+      }
 
       setTimeout(() => {
         if (sessionMap) sessionMap.invalidateSize();
@@ -592,6 +599,8 @@
     }
 
     function initMaps() {
+      if (typeof L === 'undefined') return;
+      
       sessionMap = L.map('active-map').setView([43.3, 5.0], 13);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(sessionMap);
       currentPolylineGroup = L.layerGroup().addTo(sessionMap);
@@ -601,9 +610,7 @@
     }
 
     function enableBackgroundAudio() {
-      silentAudio.play().catch(err => {
-        console.log("Audio background non démarré automatiquement :", err);
-      });
+      silentAudio.play().catch(err => console.log("Audio play error:", err));
     }
 
     function disableBackgroundAudio() {
@@ -616,11 +623,11 @@
       profile.height = document.getElementById('profile-height').value || '';
       localStorage.setItem('rider_profile', JSON.stringify(profile));
 
-      if (firebase.apps.length) {
+      if (firebase.apps && firebase.apps.length) {
         firebase.database().ref('profiles/' + profile.id).set({
           ...profile,
           lastSeen: Date.now()
-        });
+        }).catch(err => console.error("Error saving profile:", err));
       }
 
       alert('Profil enregistré avec succès !');
@@ -638,6 +645,7 @@
     }
 
     function initFirebaseAuto() {
+      if (typeof firebase === 'undefined') return;
       try {
         if (!firebase.apps.length) {
           firebase.initializeApp(DEFAULT_FIREBASE_CONFIG);
@@ -648,7 +656,7 @@
         firebase.database().ref('profiles/' + profile.id).set({
           ...profile,
           lastSeen: Date.now()
-        });
+        }).catch(e => console.warn("Firebase set profile warning:", e));
       } catch (e) {
         console.error("Erreur Firebase:", e);
       }
@@ -665,7 +673,6 @@
 
     function startSession() {
       enableBackgroundAudio();
-
       const pseudo = profile.pseudo || document.getElementById('profile-pseudo').value || 'Rider Anonyme';
 
       activeSession = {
@@ -689,9 +696,8 @@
         maxSpeed3s: 0
       };
 
-      currentPolylineGroup.clearLayers();
-      const navBtnLive = document.querySelectorAll('.nav-btn')[1];
-      switchTab('tab-active-session', navBtnLive);
+      if (currentPolylineGroup) currentPolylineGroup.clearLayers();
+      switchTab('tab-active-session');
 
       if ('geolocation' in navigator) {
         watchPositionId = navigator.geolocation.watchPosition(
@@ -728,11 +734,13 @@
 
         activeSession.totalDistance += dist;
         const segmentColor = getSpeedColor(point.speed);
-        L.polyline([[lastPt.lat, lastPt.lng], [lat, lng]], { color: segmentColor, weight: 5 }).addTo(currentPolylineGroup);
+        if (currentPolylineGroup) {
+          L.polyline([[lastPt.lat, lastPt.lng], [lat, lng]], { color: segmentColor, weight: 5 }).addTo(currentPolylineGroup);
+        }
       }
 
       activeSession.points.push(point);
-      sessionMap.panTo([lat, lng]);
+      if (sessionMap) sessionMap.panTo([lat, lng]);
 
       calculateMaxSpeed3s();
       updateActiveSessionUI(point.speed);
@@ -779,7 +787,6 @@
 
     function syncSessionToCloud() {
       if (!dbRef || !activeSession) return;
-
       const lastPoint = activeSession.points.length > 0 ? activeSession.points[activeSession.points.length - 1] : null;
 
       const cloudData = {
@@ -793,12 +800,12 @@
         totalDistance: activeSession.totalDistance
       };
 
-      dbRef.child(activeSession.id).set(cloudData);
+      dbRef.child(activeSession.id).set(cloudData).catch(e => console.warn("Cloud sync error:", e));
     }
 
     function removeSessionFromCloud(sessionId) {
       if (dbRef && sessionId) {
-        dbRef.child(sessionId).remove();
+        dbRef.child(sessionId).remove().catch(e => console.warn("Cloud remove error:", e));
       }
     }
 
@@ -809,14 +816,14 @@
         const data = snapshot.val() || {};
 
         Object.keys(activeRidersMarkers).forEach(id => {
-          if (!data[id]) {
+          if (!data[id] && liveCloudMap) {
             liveCloudMap.removeLayer(activeRidersMarkers[id]);
             delete activeRidersMarkers[id];
           }
         });
 
         Object.values(data).forEach(riderSess => {
-          if (!riderSess.lastPoint) return;
+          if (!riderSess.lastPoint || !liveCloudMap) return;
 
           const lat = riderSess.lastPoint.lat;
           const lng = riderSess.lastPoint.lng;
@@ -878,7 +885,7 @@
 
       activeSession = null;
       renderHistory();
-      switchTab('tab-history', document.querySelectorAll('.nav-btn')[3]);
+      switchTab('tab-history');
     }
 
     function saveSessionToHistory(session) {
@@ -922,17 +929,19 @@
 
     function fetchAdminData() {
       const container = document.getElementById('admin-users-list');
-      if (!firebase.apps.length) {
-        container.innerHTML = `<p style="font-size: 0.85rem; color: var(--accent-red);">Firebase non configuré.</p>`;
+      if (typeof firebase === 'undefined' || !firebase.apps || !firebase.apps.length) {
+        container.innerHTML = `<p style="font-size: 0.85rem; color: var(--accent-red);">Firebase non configuré. Vérifie la clé API et l'URL dans le fichier.</p>`;
         return;
       }
+
+      container.innerHTML = `<p style="font-size: 0.85rem; color: var(--text-muted);">Chargement...</p>`;
 
       firebase.database().ref('profiles').once('value').then(snapshot => {
         const users = snapshot.val() || {};
         const keys = Object.keys(users);
 
         if (keys.length === 0) {
-          container.innerHTML = `<p style="font-size: 0.85rem; color: var(--text-muted);">Aucun utilisateur enregistré.</p>`;
+          container.innerHTML = `<p style="font-size: 0.85rem; color: var(--text-muted);">Aucun utilisateur enregistré dans la base de données.</p>`;
           return;
         }
 
@@ -952,7 +961,7 @@
           `;
         }).join('');
       }).catch(err => {
-        container.innerHTML = `<p style="font-size: 0.85rem; color: var(--accent-red);">Erreur de lecture: ${err.message}</p>`;
+        container.innerHTML = `<p style="font-size: 0.85rem; color: var(--accent-red);">Erreur d'accès Firebase: ${err.message}</p>`;
       });
     }
 
