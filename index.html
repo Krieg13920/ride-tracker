@@ -8,7 +8,7 @@
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   
-  <!-- Google Fonts & Font Awesome Icons -->
+  <!-- Font Awesome Icons & Google Fonts -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 
@@ -20,6 +20,7 @@
       --accent-green: #22c55e;
       --accent-orange: #f97316;
       --accent-red: #ef4444;
+      --accent-purple: #a855f7;
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
       --border-color: #334155;
@@ -42,11 +43,10 @@
       overflow: hidden;
     }
 
-    /* Header */
     header {
       background-color: rgba(30, 41, 59, 0.95);
       backdrop-filter: blur(10px);
-      padding: 12px 20px;
+      padding: 12px 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -55,7 +55,7 @@
     }
 
     header h1 {
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       font-weight: 800;
       background: linear-gradient(135deg, #38bdf8, #818cf8);
       -webkit-background-clip: text;
@@ -69,8 +69,8 @@
       background-color: rgba(34, 197, 94, 0.2);
       color: var(--accent-green);
       border: 1px solid var(--accent-green);
-      font-size: 0.7rem;
-      padding: 2px 8px;
+      font-size: 0.65rem;
+      padding: 3px 8px;
       border-radius: 12px;
       font-weight: 600;
       animation: pulse 2s infinite;
@@ -82,7 +82,6 @@
       100% { opacity: 1; }
     }
 
-    /* Main Container */
     main {
       flex: 1;
       position: relative;
@@ -100,14 +99,14 @@
       flex-direction: column;
     }
 
-    /* Navigation Bar */
     nav {
       background-color: #1e293b;
       border-top: 1px solid var(--border-color);
       display: flex;
       justify-content: space-around;
-      padding: 8px 0;
+      padding: 6px 0;
       z-index: 1000;
+      overflow-x: auto;
     }
 
     .nav-btn {
@@ -117,34 +116,34 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 4px;
-      font-size: 0.75rem;
+      gap: 3px;
+      font-size: 0.65rem;
       font-weight: 600;
       cursor: pointer;
+      min-width: 55px;
       flex: 1;
       transition: color 0.2s;
     }
 
     .nav-btn i {
-      font-size: 1.2rem;
+      font-size: 1.1rem;
     }
 
     .nav-btn.active {
       color: var(--accent-blue);
     }
 
-    /* Forms & Cards */
     .card {
       background-color: var(--card-bg);
       border-radius: 16px;
-      padding: 20px;
+      padding: 16px;
       border: 1px solid var(--border-color);
       margin-bottom: 16px;
     }
 
     .card h2 {
-      font-size: 1.1rem;
-      margin-bottom: 16px;
+      font-size: 1rem;
+      margin-bottom: 14px;
       color: var(--text-main);
       display: flex;
       align-items: center;
@@ -152,14 +151,14 @@
     }
 
     .form-group {
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
 
     .form-group label {
       display: block;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       color: var(--text-muted);
-      margin-bottom: 6px;
+      margin-bottom: 4px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
@@ -169,11 +168,16 @@
       background-color: #0f172a;
       border: 1px solid var(--border-color);
       color: var(--text-main);
-      padding: 12px;
+      padding: 10px;
       border-radius: 8px;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       outline: none;
-      transition: border-color 0.2s;
+    }
+
+    .form-control:read-only {
+      opacity: 0.6;
+      cursor: not-allowed;
+      background-color: #182234;
     }
 
     .form-control:focus {
@@ -182,79 +186,62 @@
 
     .form-row {
       display: flex;
-      gap: 12px;
+      gap: 10px;
     }
 
     .form-row .form-group {
       flex: 1;
     }
 
-    /* Buttons */
     .btn {
       width: 100%;
-      padding: 14px;
+      padding: 12px;
       border: none;
-      border-radius: 12px;
+      border-radius: 10px;
       font-weight: 700;
-      font-size: 1rem;
+      font-size: 0.95rem;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      transition: transform 0.1s, background-color 0.2s;
     }
 
-    .btn:active {
-      transform: scale(0.98);
-    }
+    .btn-primary { background: linear-gradient(135deg, #0284c7, #38bdf8); color: #fff; }
+    .btn-danger { background: linear-gradient(135deg, #dc2626, #ef4444); color: #fff; }
+    .btn-secondary { background-color: #334155; color: var(--text-main); }
+    .btn-purple { background: linear-gradient(135deg, #7c3aed, #a855f7); color: #fff; }
 
-    .btn-primary {
-      background: linear-gradient(135deg, #0284c7, #38bdf8);
-      color: #fff;
-    }
-
-    .btn-danger {
-      background: linear-gradient(135deg, #dc2626, #ef4444);
-      color: #fff;
-    }
-
-    .btn-secondary {
-      background-color: #334155;
-      color: var(--text-main);
-    }
-
-    /* Stats Grid */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-      margin-bottom: 16px;
+      gap: 10px;
+      margin-bottom: 12px;
     }
 
     .stat-box {
       background: rgba(15, 23, 42, 0.6);
       border: 1px solid var(--border-color);
       border-radius: 12px;
-      padding: 12px;
+      padding: 10px;
       text-align: center;
     }
 
     .stat-label {
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       color: var(--text-muted);
       text-transform: uppercase;
     }
 
     .stat-value {
-      font-size: 1.6rem;
+      font-size: 1.4rem;
       font-weight: 800;
       color: var(--text-main);
-      margin-top: 4px;
+      margin-top: 2px;
     }
 
     .stat-value span {
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       font-weight: 400;
       color: var(--text-muted);
     }
@@ -262,11 +249,11 @@
     .map-container {
       flex: 1;
       width: 100%;
-      min-height: 250px;
-      border-radius: 16px;
+      min-height: 220px;
+      border-radius: 14px;
       overflow: hidden;
       border: 1px solid var(--border-color);
-      margin-bottom: 16px;
+      margin-bottom: 12px;
     }
 
     #active-map, #live-cloud-map {
@@ -279,35 +266,21 @@
       background: rgba(56, 189, 248, 0.1);
       border: 1px solid rgba(56, 189, 248, 0.3);
       border-radius: 8px;
-      padding: 10px;
-      font-size: 0.8rem;
+      padding: 8px 12px;
+      font-size: 0.75rem;
       color: var(--accent-blue);
       display: flex;
       align-items: center;
       gap: 8px;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
-    .history-item {
-      background-color: var(--card-bg);
+    .user-card {
+      background: #0f172a;
       border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 14px;
-      margin-bottom: 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .history-info h3 {
-      font-size: 0.95rem;
-      color: var(--accent-blue);
-    }
-
-    .history-info p {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      margin-top: 2px;
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 10px;
     }
 
     .color-picker-wrapper {
@@ -318,8 +291,8 @@
 
     .color-picker-wrapper input[type="color"] {
       border: none;
-      width: 40px;
-      height: 40px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
       cursor: pointer;
       background: none;
@@ -337,7 +310,7 @@
   <!-- Header -->
   <header>
     <h1><i class="fa-solid fa-water"></i> RiderTracker</h1>
-    <span class="badge-live" id="live-indicator"><i class="fa-solid fa-circle"></i> OPTIMISÉ 5MIN</span>
+    <span class="badge-live" id="live-indicator"><i class="fa-solid fa-circle"></i> LIVE 15S</span>
   </header>
 
   <!-- Main Body Content -->
@@ -386,7 +359,7 @@
             <label>Couleur principale</label>
             <div class="color-picker-wrapper">
               <input type="color" id="sail-color" value="#f97316">
-              <span style="font-size: 0.8rem; color: var(--text-muted);">Repère visuel live</span>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">Repère visuel live</span>
             </div>
           </div>
           <div class="form-group">
@@ -409,8 +382,8 @@
     <!-- TAB 2: SESSION EN COURS -->
     <div id="tab-active-session" class="tab-content">
       <div class="notice-box">
-        <i class="fa-solid fa-bolt"></i>
-        <span>Enregistrement GPS continu local. Envoi Cloud toutes les 5 min (Économie de batterie).</span>
+        <i class="fa-solid fa-shield-halved"></i>
+        <span>Tracking en tâche de fond actif. Tu peux verrouiller ton écran avec le bouton physique du téléphone.</span>
       </div>
 
       <div class="stats-grid">
@@ -428,7 +401,7 @@
         </div>
         <div class="stat-box">
           <div class="stat-label">Durée</div>
-          <div class="stat-value" id="stat-duration" style="font-size: 1.3rem;">00:00:00</div>
+          <div class="stat-value" id="stat-duration" style="font-size: 1.2rem;">00:00:00</div>
         </div>
       </div>
 
@@ -443,12 +416,12 @@
 
     <!-- TAB 3: CARTE EN DIRECT (SOL) -->
     <div id="tab-live-map" class="tab-content">
-      <div style="margin-bottom: 10px;">
-        <p style="font-size: 0.85rem; color: var(--text-muted);">
-          <i class="fa-solid fa-users" style="color: var(--accent-blue);"></i> Riders en direct sur l'eau (Mise à jour Cloud / 5 min)
+      <div style="margin-bottom: 8px;">
+        <p style="font-size: 0.8rem; color: var(--text-muted);">
+          <i class="fa-solid fa-users" style="color: var(--accent-blue);"></i> Riders connectés en direct (mises à jour / 15s)
         </p>
       </div>
-      <div class="map-container" style="height: calc(100% - 40px);">
+      <div class="map-container" style="height: calc(100% - 35px);">
         <div id="live-cloud-map"></div>
       </div>
     </div>
@@ -456,7 +429,7 @@
     <!-- TAB 4: HISTORIQUE -->
     <div id="tab-history" class="tab-content">
       <div class="card">
-        <h2><i class="fa-solid fa-clock-rotate-left"></i> Sessions enregistrées</h2>
+        <h2><i class="fa-solid fa-clock-rotate-left"></i> Mes sessions enregistrées</h2>
         <div id="history-list">
           <p style="color: var(--text-muted); font-size: 0.85rem;">Aucune session enregistrée pour le moment.</p>
         </div>
@@ -466,7 +439,7 @@
     <!-- TAB 5: PROFIL / CONFIG FIREBASE -->
     <div id="tab-profile" class="tab-content">
       <div class="card">
-        <h2><i class="fa-solid fa-user"></i> Profil Rider</h2>
+        <h2><i class="fa-solid fa-user"></i> Mon Profil Rider</h2>
         <div class="form-group">
           <label>Pseudo / Nom</label>
           <input type="text" id="profile-pseudo" class="form-control" placeholder="Rider Anonyme">
@@ -487,21 +460,34 @@
       </div>
 
       <div class="card">
-        <h2><i class="fa-solid fa-fire" style="color: #f97316;"></i> Configuration Firebase</h2>
-        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">
-          Entrez vos identifiants Firebase Realtime Database pour partager votre position live avec le sol.
+        <h2><i class="fa-solid fa-fire" style="color: #f97316;"></i> Réseau Firebase (Fixe)</h2>
+        <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px;">
+          Configuration réseau globale partagée par tous les utilisateurs de l'application.
         </p>
         <div class="form-group">
           <label>Database URL</label>
-          <input type="text" id="firebase-url" class="form-control" placeholder="https://votre-projet-default-rtdb.firebaseio.com">
+          <input type="text" id="firebase-url" class="form-control" readonly>
         </div>
         <div class="form-group">
           <label>API Key</label>
-          <input type="text" id="firebase-apikey" class="form-control" placeholder="AIzaSy...">
+          <input type="text" id="firebase-apikey" class="form-control" readonly>
         </div>
-        <button class="btn btn-primary" onclick="initFirebase()">
-          <i class="fa-solid fa-plug"></i> Connecter Firebase
+      </div>
+    </div>
+
+    <!-- TAB 6: ADMIN -->
+    <div id="tab-admin" class="tab-content">
+      <div class="card">
+        <h2><i class="fa-solid fa-user-shield" style="color: var(--accent-purple);"></i> Administration & Communauté</h2>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">
+          Liste des utilisateurs et des sessions enregistrées dans Firebase.
+        </p>
+        <button class="btn btn-purple" onclick="fetchAdminData()" style="margin-bottom: 12px;">
+          <i class="fa-solid fa-rotate"></i> Rafraîchir les profils
         </button>
+        <div id="admin-users-list">
+          <p style="font-size: 0.85rem; color: var(--text-muted);">Chargement des données...</p>
+        </div>
       </div>
     </div>
 
@@ -515,29 +501,42 @@
     </button>
     <button class="nav-btn" onclick="switchTab('tab-active-session', this)">
       <i class="fa-solid fa-gauge-high"></i>
-      <span>Live Rider</span>
+      <span>Live</span>
     </button>
     <button class="nav-btn" onclick="switchTab('tab-live-map', this)">
       <i class="fa-solid fa-map-location-dot"></i>
-      <span>Carte Sol</span>
+      <span>Carte</span>
     </button>
     <button class="nav-btn" onclick="switchTab('tab-history', this)">
       <i class="fa-solid fa-list"></i>
-      <span>Historique</span>
+      <span>History</span>
     </button>
     <button class="nav-btn" onclick="switchTab('tab-profile', this)">
-      <i class="fa-solid fa-gear"></i>
+      <i class="fa-solid fa-user-gear"></i>
       <span>Profil</span>
+    </button>
+    <button class="nav-btn" onclick="switchTab('tab-admin', this)">
+      <i class="fa-solid fa-user-shield"></i>
+      <span>Admin</span>
     </button>
   </nav>
 
   <!-- JavaScript Logic -->
   <script>
-    // --- ÉTAT GLOBAL DE L'APPLICATION ---
+    // Code PIN Administrateur
+    const ADMIN_PIN = "4321";
+    let isAdminUnlocked = false;
+
+    // Config Firebase globale verrouillée
+    const DEFAULT_FIREBASE_CONFIG = {
+      databaseURL: "https://ridertracker-live-default-rtdb.firebaseio.com",
+      apiKey: "AIzaSyDEFAULT_GLOBAL_KEY_RIDERTRACKER"
+    };
+
     let activeSession = null;
     let watchPositionId = null;
     let cloudSyncTimer = null;
-    const SYNC_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes d'intervalle cloud
+    const SYNC_INTERVAL_MS = 15 * 1000;
 
     let sessionMap = null;
     let liveCloudMap = null;
@@ -545,22 +544,39 @@
     let activeRidersMarkers = {};
     let sailPhotoBase64 = "";
 
-    let profile = { pseudo: 'Rider Anonyme', weight: '', height: '' };
-    let firebaseConfig = { databaseURL: '', apiKey: '' };
+    // Piste audio silencieuse pour empêcher le système de suspendre le GPS écran verrouillé
+    const silentAudio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
+    silentAudio.loop = true;
+
+    let profile = { id: 'usr_' + Math.random().toString(36).substr(2, 9), pseudo: 'Rider Anonyme', weight: '', height: '' };
     let dbRef = null;
 
-    // --- INITIALISATION ---
     window.addEventListener('DOMContentLoaded', () => {
+      setupDefaultFirebaseInputs();
       loadProfile();
-      loadFirebaseConfig();
+      initFirebaseAuto();
       initMaps();
       renderHistory();
 
       document.getElementById('input-sail-photo').addEventListener('change', handleImageUpload);
     });
 
-    // --- ONGLETS ---
+    function setupDefaultFirebaseInputs() {
+      document.getElementById('firebase-url').value = DEFAULT_FIREBASE_CONFIG.databaseURL;
+      document.getElementById('firebase-apikey').value = DEFAULT_FIREBASE_CONFIG.apiKey;
+    }
+
     function switchTab(tabId, btnElement) {
+      // Protection par code PIN pour l'onglet Admin
+      if (tabId === 'tab-admin' && !isAdminUnlocked) {
+        const code = prompt("Entrez le code administrateur :");
+        if (code !== ADMIN_PIN) {
+          alert("Code PIN incorrect ! Accès refusé.");
+          return;
+        }
+        isAdminUnlocked = true;
+      }
+
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
 
@@ -571,75 +587,70 @@
         if (sessionMap) sessionMap.invalidateSize();
         if (liveCloudMap) liveCloudMap.invalidateSize();
       }, 200);
+
+      if (tabId === 'tab-admin') fetchAdminData();
     }
 
-    // --- INITIALISATION CARTES ---
     function initMaps() {
       sessionMap = L.map('active-map').setView([43.3, 5.0], 13);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '© OpenStreetMap'
-      }).addTo(sessionMap);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(sessionMap);
       currentPolylineGroup = L.layerGroup().addTo(sessionMap);
 
       liveCloudMap = L.map('live-cloud-map').setView([43.3, 5.0], 12);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '© OpenStreetMap'
-      }).addTo(liveCloudMap);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(liveCloudMap);
     }
 
-    // --- PROFIL & CONFIG FIREBASE ---
+    function enableBackgroundAudio() {
+      silentAudio.play().catch(err => {
+        console.log("Audio background non démarré automatiquement :", err);
+      });
+    }
+
+    function disableBackgroundAudio() {
+      silentAudio.pause();
+    }
+
     function saveProfile() {
       profile.pseudo = document.getElementById('profile-pseudo').value || 'Rider Anonyme';
       profile.weight = document.getElementById('profile-weight').value || '';
       profile.height = document.getElementById('profile-height').value || '';
       localStorage.setItem('rider_profile', JSON.stringify(profile));
-      alert('Profil enregistré !');
+
+      if (firebase.apps.length) {
+        firebase.database().ref('profiles/' + profile.id).set({
+          ...profile,
+          lastSeen: Date.now()
+        });
+      }
+
+      alert('Profil enregistré avec succès !');
     }
 
     function loadProfile() {
       const saved = localStorage.getItem('rider_profile');
       if (saved) {
         profile = JSON.parse(saved);
+        if (!profile.id) profile.id = 'usr_' + Math.random().toString(36).substr(2, 9);
         document.getElementById('profile-pseudo').value = profile.pseudo || '';
         document.getElementById('profile-weight').value = profile.weight || '';
         document.getElementById('profile-height').value = profile.height || '';
       }
     }
 
-    function loadFirebaseConfig() {
-      const saved = localStorage.getItem('firebase_config');
-      if (saved) {
-        firebaseConfig = JSON.parse(saved);
-        document.getElementById('firebase-url').value = firebaseConfig.databaseURL || '';
-        document.getElementById('firebase-apikey').value = firebaseConfig.apiKey || '';
-        if (firebaseConfig.databaseURL) initFirebase(true);
-      }
-    }
-
-    function initFirebase(silent = false) {
-      const dbUrl = document.getElementById('firebase-url').value.trim();
-      const apiKey = document.getElementById('firebase-apikey').value.trim();
-
-      if (!dbUrl) {
-        if (!silent) alert("Veuillez renseigner l'URL Realtime Database.");
-        return;
-      }
-
-      firebaseConfig = { databaseURL: dbUrl, apiKey: apiKey };
-      localStorage.setItem('firebase_config', JSON.stringify(firebaseConfig));
-
+    function initFirebaseAuto() {
       try {
         if (!firebase.apps.length) {
-          firebase.initializeApp(firebaseConfig);
+          firebase.initializeApp(DEFAULT_FIREBASE_CONFIG);
         }
         dbRef = firebase.database().ref('live_sessions');
         listenToLiveSessions();
-        if (!silent) alert('Firebase connecté avec succès !');
+
+        firebase.database().ref('profiles/' + profile.id).set({
+          ...profile,
+          lastSeen: Date.now()
+        });
       } catch (e) {
         console.error("Erreur Firebase:", e);
-        if (!silent) alert("Erreur d'initialisation Firebase.");
       }
     }
 
@@ -652,14 +663,15 @@
       }
     }
 
-    // --- DÉMARRAGE DE LA SESSION ---
     function startSession() {
+      enableBackgroundAudio();
+
       const pseudo = profile.pseudo || document.getElementById('profile-pseudo').value || 'Rider Anonyme';
 
       activeSession = {
         id: 'sess_' + Date.now(),
         startTime: new Date().getTime(),
-        rider: { pseudo, weight: profile.weight, height: profile.height },
+        rider: { id: profile.id, pseudo, weight: profile.weight, height: profile.height },
         sport: document.getElementById('input-sport').value,
         board: {
           brand: document.getElementById('board-brand').value || '-',
@@ -674,8 +686,7 @@
         windSpeed: document.getElementById('input-wind-speed').value || '-',
         points: [],
         totalDistance: 0,
-        maxSpeed3s: 0,
-        speedsAbove5: []
+        maxSpeed3s: 0
       };
 
       currentPolylineGroup.clearLayers();
@@ -686,28 +697,22 @@
         watchPositionId = navigator.geolocation.watchPosition(
           handleGPSUpdate,
           handleGPSError,
-          { enableHighAccuracy: true, maximumAge: 1000, timeout: 5000 }
+          { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
         );
       } else {
-        alert('Géolocalisation non supportée sur cet appareil.');
+        alert('Géolocalisation non supportée.');
       }
 
-      // Synchronisation initiale + Timer de 5 minutes
       syncSessionToCloud();
-      
       if (cloudSyncTimer) clearInterval(cloudSyncTimer);
-      cloudSyncTimer = setInterval(() => {
-        syncSessionToCloud();
-        console.log('Sync Cloud effectuée (Intervalle 5 min)');
-      }, SYNC_INTERVAL_MS);
+      cloudSyncTimer = setInterval(() => { syncSessionToCloud(); }, SYNC_INTERVAL_MS);
     }
 
-    // --- SIGNAL GPS LOCAL ---
     function handleGPSUpdate(pos) {
       const lat = pos.coords.latitude;
       const lng = pos.coords.longitude;
       const timestamp = pos.timestamp || Date.now();
-      let rawSpeed = pos.coords.speed ? (pos.coords.speed * 3.6) : 0; // km/h
+      let rawSpeed = pos.coords.speed ? (pos.coords.speed * 3.6) : 0;
 
       const point = { lat, lng, time: timestamp, speed: rawSpeed };
 
@@ -722,15 +727,12 @@
         }
 
         activeSession.totalDistance += dist;
-
         const segmentColor = getSpeedColor(point.speed);
         L.polyline([[lastPt.lat, lastPt.lng], [lat, lng]], { color: segmentColor, weight: 5 }).addTo(currentPolylineGroup);
       }
 
       activeSession.points.push(point);
       sessionMap.panTo([lat, lng]);
-
-      if (point.speed >= 5) activeSession.speedsAbove5.push(point.speed);
 
       calculateMaxSpeed3s();
       updateActiveSessionUI(point.speed);
@@ -775,7 +777,6 @@
       document.getElementById('stat-duration').innerText = `${hrs}:${mins}:${secs}`;
     }
 
-    // --- CLOUD SYNC FIREBASE (TOUTES LES 5 MIN) ---
     function syncSessionToCloud() {
       if (!dbRef || !activeSession) return;
 
@@ -834,7 +835,7 @@
               <b>Vmax 3s:</b> ${riderSess.maxSpeed3s ? riderSess.maxSpeed3s.toFixed(1) : 0} km/h<br/>
               <b>Distance:</b> ${riderSess.totalDistance ? riderSess.totalDistance.toFixed(2) : 0} km<br/>
               ${riderSess.sail?.photo ? `<img src="${riderSess.sail.photo}" style="width:100%; border-radius:8px; margin-top:6px; max-height:120px; object-fit:cover;"/>` : ''}
-              <small style="color:#64748b;">Dernier envoi: ${new Date(riderSess.lastUpdated).toLocaleTimeString()}</small>
+              <small style="color:#64748b;">Mise à jour: ${new Date(riderSess.lastUpdated).toLocaleTimeString()}</small>
             </div>
           `;
 
@@ -850,9 +851,9 @@
       });
     }
 
-    // --- FIN DE SESSION & EXPORT GPX ---
     function stopSession() {
       if (watchPositionId !== null) navigator.geolocation.clearWatch(watchPositionId);
+      disableBackgroundAudio();
 
       if (cloudSyncTimer) {
         clearInterval(cloudSyncTimer);
@@ -873,7 +874,7 @@
       const gpxContent = generateGPX(activeSession);
       downloadGPX(gpxContent, `session_${activeSession.sport}_${Date.now()}.gpx`);
 
-      alert(`Session terminée !\n\nDurée : ${activeSession.durationFormatted}\nDistance : ${activeSession.totalDistance.toFixed(2)} km\nVitesse Max (3s) : ${activeSession.maxSpeed3s.toFixed(1)} km/h\nFichier GPX téléchargé.`);
+      alert(`Session terminée !\n\nDurée : ${activeSession.durationFormatted}\nDistance : ${activeSession.totalDistance.toFixed(2)} km\nVitesse Max (3s) : ${activeSession.maxSpeed3s.toFixed(1)} km/h`);
 
       activeSession = null;
       renderHistory();
@@ -896,13 +897,14 @@
       }
 
       container.innerHTML = history.map((s, idx) => `
-        <div class="history-item">
-          <div class="history-info">
-            <h3>${s.sport} - ${new Date(s.startTime).toLocaleDateString()}</h3>
-            <p><i class="fa-solid fa-gauge"></i> Vmax 3s: <b>${s.maxSpeed3s ? s.maxSpeed3s.toFixed(1) : 0} km/h</b> | <i class="fa-solid fa-route"></i> ${s.totalDistance.toFixed(2)} km</p>
-            <p><i class="fa-solid fa-stopwatch"></i> Durée: ${s.durationFormatted || '-'}</p>
+        <div style="background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <h3 style="font-size: 0.9rem; color: var(--accent-blue);">${s.sport} - ${new Date(s.startTime).toLocaleDateString()}</h3>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">
+              Vmax 3s: <b>${s.maxSpeed3s ? s.maxSpeed3s.toFixed(1) : 0} km/h</b> | Distance: ${s.totalDistance.toFixed(2)} km
+            </p>
           </div>
-          <button class="btn btn-secondary" style="width: auto; padding: 8px 12px; font-size: 0.8rem;" onclick="reDownloadGPX(${idx})">
+          <button class="btn btn-secondary" style="width: auto; padding: 6px 10px; font-size: 0.75rem;" onclick="reDownloadGPX(${idx})">
             <i class="fa-solid fa-download"></i> GPX
           </button>
         </div>
@@ -916,6 +918,42 @@
         const gpx = generateGPX(session);
         downloadGPX(gpx, `session_${session.sport}_${session.startTime}.gpx`);
       }
+    }
+
+    function fetchAdminData() {
+      const container = document.getElementById('admin-users-list');
+      if (!firebase.apps.length) {
+        container.innerHTML = `<p style="font-size: 0.85rem; color: var(--accent-red);">Firebase non configuré.</p>`;
+        return;
+      }
+
+      firebase.database().ref('profiles').once('value').then(snapshot => {
+        const users = snapshot.val() || {};
+        const keys = Object.keys(users);
+
+        if (keys.length === 0) {
+          container.innerHTML = `<p style="font-size: 0.85rem; color: var(--text-muted);">Aucun utilisateur enregistré.</p>`;
+          return;
+        }
+
+        container.innerHTML = keys.map(k => {
+          const u = users[k];
+          return `
+            <div class="user-card">
+              <div style="display:flex; justify-content:space-between; font-weight:bold; color:var(--accent-blue); margin-bottom:4px;">
+                <span>${u.pseudo || 'Anonyme'}</span>
+                <span style="font-size:0.75rem; color:var(--text-muted);">${u.id || ''}</span>
+              </div>
+              <div style="font-size:0.8rem; color:var(--text-muted);">
+                Poids: ${u.weight || '-'} kg | Taille: ${u.height || '-'} cm<br/>
+                Dernière activité: ${u.lastSeen ? new Date(u.lastSeen).toLocaleString() : 'Inconnue'}
+              </div>
+            </div>
+          `;
+        }).join('');
+      }).catch(err => {
+        container.innerHTML = `<p style="font-size: 0.85rem; color: var(--accent-red);">Erreur de lecture: ${err.message}</p>`;
+      });
     }
 
     function generateGPX(session) {
