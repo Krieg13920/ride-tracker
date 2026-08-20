@@ -129,13 +129,8 @@
       transition: color 0.2s;
     }
 
-    .nav-btn i {
-      font-size: 1.1rem;
-    }
-
-    .nav-btn.active {
-      color: var(--accent-blue);
-    }
+    .nav-btn i { font-size: 1.1rem; }
+    .nav-btn.active { color: var(--accent-blue); }
 
     .card {
       background-color: var(--card-bg);
@@ -154,10 +149,7 @@
       gap: 8px;
     }
 
-    .form-group {
-      margin-bottom: 12px;
-    }
-
+    .form-group { margin-bottom: 12px; }
     .form-group label {
       display: block;
       font-size: 0.75rem;
@@ -184,18 +176,9 @@
       background-color: #182234;
     }
 
-    .form-control:focus {
-      border-color: var(--accent-blue);
-    }
-
-    .form-row {
-      display: flex;
-      gap: 10px;
-    }
-
-    .form-row .form-group {
-      flex: 1;
-    }
+    .form-control:focus { border-color: var(--accent-blue); }
+    .form-row { display: flex; gap: 10px; }
+    .form-row .form-group { flex: 1; }
 
     .btn {
       width: 100%;
@@ -215,118 +198,102 @@
     .btn-secondary { background-color: #334155; color: var(--text-main); }
     .btn-purple { background: linear-gradient(135deg, #7c3aed, #a855f7); color: #fff; }
 
+    .btn-action-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
     .btn-hold {
       width: 100%;
-      padding: 14px;
+      padding: 12px;
       border: none;
       border-radius: 12px;
       font-weight: 700;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 12px;
-      background: linear-gradient(135deg, #dc2626, #ef4444);
       color: #fff;
       user-select: none;
       -webkit-user-select: none;
       touch-action: none;
-      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-      transition: background 0.2s, transform 0.1s;
+      transition: transform 0.1s;
     }
 
-    .btn-hold:active {
-      transform: scale(0.98);
+    .btn-hold-stop {
+      background: linear-gradient(135deg, #475569, #334155);
+      border: 1px solid #475569;
     }
+
+    .btn-hold-sos {
+      background: linear-gradient(135deg, #b91c1c, #ef4444);
+      box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+      animation: sosGlow 1.5s infinite alternate;
+    }
+
+    @keyframes sosGlow {
+      0% { box-shadow: 0 0 5px rgba(239,68,68,0.4); }
+      100% { box-shadow: 0 0 20px rgba(239,68,68,0.9); }
+    }
+
+    .btn-hold:active { transform: scale(0.98); }
 
     .camembert-box {
-      width: 28px;
-      height: 28px;
+      width: 26px;
+      height: 26px;
       border-radius: 50%;
       background: conic-gradient(#22c55e 0deg, rgba(255,255,255,0.25) 0deg);
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      transition: background 0.05s linear;
     }
 
     .camembert-inner {
-      width: 18px;
-      height: 18px;
-      background-color: #dc2626;
+      width: 16px;
+      height: 16px;
+      background-color: rgba(0,0,0,0.5);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.65rem;
+      font-size: 0.6rem;
       color: #fff;
-      transition: background-color 0.2s;
     }
 
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 10px;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
     .stat-box {
       background: rgba(15, 23, 42, 0.6);
       border: 1px solid var(--border-color);
       border-radius: 12px;
-      padding: 10px;
+      padding: 8px;
       text-align: center;
     }
 
-    .stat-label {
-      font-size: 0.7rem;
-      color: var(--text-muted);
-      text-transform: uppercase;
-    }
-
-    .stat-value {
-      font-size: 1.4rem;
-      font-weight: 800;
-      color: var(--text-main);
-      margin-top: 2px;
-    }
-
-    .stat-value span {
-      font-size: 0.75rem;
-      font-weight: 400;
-      color: var(--text-muted);
-    }
+    .stat-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; }
+    .stat-value { font-size: 1.3rem; font-weight: 800; color: var(--text-main); }
+    .stat-value span { font-size: 0.7rem; font-weight: 400; color: var(--text-muted); }
 
     .map-container {
       flex: 1;
       width: 100%;
-      min-height: 220px;
+      min-height: 180px;
       border-radius: 14px;
       overflow: hidden;
       border: 1px solid var(--border-color);
-      margin-bottom: 12px;
-    }
-
-    #active-map, #live-cloud-map {
-      height: 100%;
-      width: 100%;
-      background-color: #0f172a;
-    }
-
-    .notice-box {
-      background: rgba(56, 189, 248, 0.1);
-      border: 1px solid rgba(56, 189, 248, 0.3);
-      border-radius: 8px;
-      padding: 8px 12px;
-      font-size: 0.75rem;
-      color: var(--accent-blue);
-      display: flex;
-      align-items: center;
-      gap: 8px;
       margin-bottom: 10px;
     }
+
+    #active-map, #live-cloud-map { height: 100%; width: 100%; background-color: #0f172a; }
 
     .user-card {
       background: #0f172a;
@@ -336,34 +303,46 @@
       margin-bottom: 10px;
     }
 
-    .color-picker-wrapper {
+    .color-picker-wrapper { display: flex; align-items: center; gap: 10px; }
+    .color-picker-wrapper input[type="color"] {
+      border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; background: none;
+    }
+
+    .popup-img-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px; }
+    .popup-img-grid img { width: 100%; height: 70px; object-fit: cover; border-radius: 6px; }
+
+    /* Sos Marker Custom Animation */
+    .sos-marker-container {
+      position: relative;
+      width: 34px;
+      height: 34px;
+      background: #ef4444;
+      border-radius: 50%;
       display: flex;
       align-items: center;
-      gap: 10px;
+      justify-content: center;
+      border: 2px solid #ffffff;
+      box-shadow: 0 0 15px #ef4444;
+      animation: sosBlink 0.6s infinite alternate;
     }
 
-    .color-picker-wrapper input[type="color"] {
-      border: none;
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      cursor: pointer;
-      background: none;
+    @keyframes sosBlink {
+      0% { transform: scale(1); background: #ef4444; }
+      100% { transform: scale(1.2); background: #991b1b; }
     }
 
-    .popup-img-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-      margin-top: 6px;
-    }
-
-    .popup-img-grid img {
-      width: 100%;
-      height: 80px;
-      object-fit: cover;
-      border-radius: 6px;
-      border: 1px solid #cbd5e1;
+    .sos-alert-banner {
+      display: none;
+      background: linear-gradient(135deg, #dc2626, #b91c1c);
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      margin-bottom: 10px;
+      align-items: center;
+      justify-content: space-between;
+      animation: pulse 1s infinite;
     }
   </style>
 
@@ -455,9 +434,10 @@
 
     <!-- TAB 2: SESSION EN COURS -->
     <div id="tab-active-session" class="tab-content">
-      <div class="notice-box">
-        <i class="fa-solid fa-shield-halved"></i>
-        <span>Maintenir le bouton 3s à 5s puis relâcher pour terminer.</span>
+      
+      <div id="sos-active-banner" class="sos-alert-banner">
+        <span><i class="fa-solid fa-triangle-exclamation"></i> DÉTRESSE ACTIVÉE - SIGNAL SOUMIS</span>
+        <button onclick="cancelDistress()" style="background:#fff; color:#b91c1c; border:none; padding:4px 8px; border-radius:6px; font-weight:bold; cursor:pointer;">Annuler</button>
       </div>
 
       <div class="stats-grid">
@@ -475,7 +455,7 @@
         </div>
         <div class="stat-box">
           <div class="stat-label">Durée</div>
-          <div class="stat-value" id="stat-duration" style="font-size: 1.2rem;">00:00:00</div>
+          <div class="stat-value" id="stat-duration" style="font-size: 1.1rem;">00:00:00</div>
         </div>
       </div>
 
@@ -483,24 +463,39 @@
         <div id="active-map"></div>
       </div>
 
-      <button id="btn-stop-session" class="btn-hold">
-        <div class="camembert-box" id="camembert-pie">
-          <div class="camembert-inner" id="camembert-inner">
-            <i class="fa-solid fa-stop" id="camembert-icon"></i>
+      <div class="btn-action-group">
+        <!-- Bouton SOS / Détresse -->
+        <button id="btn-sos-session" class="btn-hold btn-hold-sos">
+          <div class="camembert-box" id="camembert-sos-pie">
+            <div class="camembert-inner"><i class="fa-solid fa-triangle-exclamation"></i></div>
           </div>
-        </div>
-        <span id="hold-status-text">MAINTENIR 3s À 5s POUR FINIR</span>
-      </button>
+          <span id="hold-sos-text">DÉTRESSE / SOS (MAINTENIR 3s)</span>
+        </button>
+
+        <!-- Bouton Stop Session -->
+        <button id="btn-stop-session" class="btn-hold btn-hold-stop">
+          <div class="camembert-box" id="camembert-stop-pie">
+            <div class="camembert-inner"><i class="fa-solid fa-stop"></i></div>
+          </div>
+          <span id="hold-stop-text">TERMINER SESSION (MAINTENIR 3s-5s)</span>
+        </button>
+      </div>
+
     </div>
 
     <!-- TAB 3: CARTE EN DIRECT ET SESSIONS DU JOUR -->
     <div id="tab-live-map" class="tab-content">
+      <div id="proximity-alert-banner" class="sos-alert-banner">
+        <span id="proximity-alert-text"><i class="fa-solid fa-triangle-exclamation"></i> ALERTE DÉTRESSE À PROXIMITÉ !</span>
+        <button onclick="stopEmergencySound()" style="background:#fff; color:#b91c1c; border:none; padding:4px 8px; border-radius:6px; font-weight:bold; cursor:pointer;">Couper Son</button>
+      </div>
+
       <div style="margin-bottom: 8px;">
         <p style="font-size: 0.8rem; color: var(--text-muted);">
           <i class="fa-solid fa-users" style="color: var(--accent-blue);"></i> Riders en direct & traces conservées jusqu'à minuit
         </p>
       </div>
-      <div class="map-container" style="height: calc(100% - 35px);">
+      <div class="map-container" style="height: calc(100% - 40px);">
         <div id="live-cloud-map"></div>
       </div>
     </div>
@@ -515,7 +510,7 @@
       </div>
     </div>
 
-    <!-- TAB 5: PROFIL / COMPTE PERMANENT -->
+    <!-- TAB 5: PROFIL -->
     <div id="tab-profile" class="tab-content">
       <div class="card">
         <h2><i class="fa-solid fa-id-card" style="color: var(--accent-blue);"></i> Mon Compte Rider</h2>
@@ -559,9 +554,6 @@
     <div id="tab-admin" class="tab-content">
       <div class="card">
         <h2><i class="fa-solid fa-user-shield" style="color: var(--accent-purple);"></i> Administration & Communauté</h2>
-        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">
-          Comptes utilisateurs et activités enregistrées dans Firebase.
-        </p>
         <button class="btn btn-purple" onclick="fetchAdminData()" style="margin-bottom: 12px;">
           <i class="fa-solid fa-rotate"></i> Rafraîchir les profils
         </button>
@@ -615,6 +607,7 @@
     let watchPositionId = null;
     let wakeLockObj = null;
     let audioCtx = null;
+    let alarmInterval = null;
 
     let sessionMap = null;
     let liveCloudMap = null;
@@ -627,16 +620,16 @@
 
     let profile = null;
     let dbDailyRef = null;
+    let currentMyPos = null;
 
-    let holdStartTime = 0;
-    let holdAnimFrame = null;
-    let holdExpired = false;
+    // Control Hold Timers
+    let holdStopStartTime = 0, holdStopAnimFrame = null, holdStopExpired = false;
+    let holdSosStartTime = 0, holdSosAnimFrame = null;
 
     window.addEventListener('DOMContentLoaded', () => {
       setupDefaultFirebaseInputs();
       initAccountProfile();
       
-      // ORDRE DE CHARGEMENT : Les cartes doivent être initialisées AVANT Firebase
       try { initMaps(); } catch(e) { console.warn("Maps Init Exception:", e); }
       try { initFirebaseAuto(); } catch(e) { console.warn("Firebase Init Exception:", e); }
       try { renderHistory(); } catch(e) { console.warn("History Init Exception:", e); }
@@ -644,7 +637,7 @@
       document.getElementById('input-sail-photo').addEventListener('change', (e) => handleImageUpload(e, 'sail'));
       document.getElementById('input-sea-photo').addEventListener('change', (e) => handleImageUpload(e, 'sea'));
 
-      initHoldButton();
+      initHoldButtons();
 
       document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible' && activeSession) {
@@ -654,89 +647,154 @@
       });
     });
 
-    function initHoldButton() {
-      const btn = document.getElementById('btn-stop-session');
-      if (!btn) return;
+    function initHoldButtons() {
+      // STOP BUTTON
+      const btnStop = document.getElementById('btn-stop-session');
+      if (btnStop) {
+        btnStop.addEventListener('pointerdown', (e) => startHoldStop(e));
+        btnStop.addEventListener('pointerup', endHoldStop);
+        btnStop.addEventListener('pointerleave', cancelHoldStop);
+        btnStop.addEventListener('pointercancel', cancelHoldStop);
+      }
 
-      btn.addEventListener('pointerdown', startHold);
-      btn.addEventListener('pointerup', endHold);
-      btn.addEventListener('pointerleave', cancelHold);
-      btn.addEventListener('pointercancel', cancelHold);
+      // SOS BUTTON
+      const btnSos = document.getElementById('btn-sos-session');
+      if (btnSos) {
+        btnSos.addEventListener('pointerdown', (e) => startHoldSos(e));
+        btnSos.addEventListener('pointerup', endHoldSos);
+        btnSos.addEventListener('pointerleave', cancelHoldSos);
+        btnSos.addEventListener('pointercancel', cancelHoldSos);
+      }
     }
 
-    function startHold(e) {
+    // --- STOP BUTTON LOGIC (3s - 5s) ---
+    function startHoldStop(e) {
       if (!activeSession) return;
       e.preventDefault();
-      holdStartTime = Date.now();
-      holdExpired = false;
+      holdStopStartTime = Date.now();
+      holdStopExpired = false;
 
-      const camembert = document.getElementById('camembert-pie');
-      const innerCircle = document.getElementById('camembert-inner');
-      const statusTxt = document.getElementById('hold-status-text');
+      const pie = document.getElementById('camembert-stop-pie');
+      const statusTxt = document.getElementById('hold-stop-text');
 
-      function animatePie() {
-        const elapsed = Date.now() - holdStartTime;
-
+      function animate() {
+        const elapsed = Date.now() - holdStopStartTime;
         if (elapsed < 3000) {
-          const pct = elapsed / 3000;
-          const deg = pct * 360;
-          camembert.style.background = `conic-gradient(#22c55e ${deg}deg, rgba(255,255,255,0.25) ${deg}deg)`;
-          innerCircle.style.backgroundColor = '#dc2626';
+          const deg = (elapsed / 3000) * 360;
+          pie.style.background = `conic-gradient(#22c55e ${deg}deg, rgba(255,255,255,0.25) ${deg}deg)`;
           statusTxt.innerText = `MAINTENIR (${(3 - elapsed/1000).toFixed(1)}s)`;
-          holdAnimFrame = requestAnimationFrame(animatePie);
+          holdStopAnimFrame = requestAnimationFrame(animate);
         } else if (elapsed <= 5000) {
-          camembert.style.background = `conic-gradient(#22c55e 360deg, #22c55e 360deg)`;
-          innerCircle.style.backgroundColor = '#16a34a';
+          pie.style.background = `conic-gradient(#22c55e 360deg, #22c55e 360deg)`;
           statusTxt.innerText = "RELÂCHEZ POUR VALIDER !";
-          holdAnimFrame = requestAnimationFrame(animatePie);
+          holdStopAnimFrame = requestAnimationFrame(animate);
         } else {
-          holdExpired = true;
-          cancelAnimationFrame(holdAnimFrame);
-          camembert.style.background = `conic-gradient(#ef4444 360deg, #ef4444 360deg)`;
-          innerCircle.style.backgroundColor = '#991b1b';
+          holdStopExpired = true;
+          cancelAnimationFrame(holdStopAnimFrame);
+          pie.style.background = `conic-gradient(#ef4444 360deg, #ef4444 360deg)`;
           statusTxt.innerText = "TROP LONG (>5s) ! ANNULÉ";
-          setTimeout(() => { resetHoldUI(); }, 1500);
+          setTimeout(resetStopHoldUI, 1500);
         }
       }
-
-      holdAnimFrame = requestAnimationFrame(animatePie);
+      holdStopAnimFrame = requestAnimationFrame(animate);
     }
 
-    function endHold(e) {
-      if (!holdStartTime || holdExpired) return;
-      const elapsed = Date.now() - holdStartTime;
-      cancelAnimationFrame(holdAnimFrame);
-
-      const statusTxt = document.getElementById('hold-status-text');
+    function endHoldStop() {
+      if (!holdStopStartTime || holdStopExpired) return;
+      const elapsed = Date.now() - holdStopStartTime;
+      cancelAnimationFrame(holdStopAnimFrame);
 
       if (elapsed >= 3000 && elapsed <= 5000) {
-        resetHoldUI();
+        resetStopHoldUI();
         stopSession();
       } else if (elapsed < 3000) {
-        statusTxt.innerText = "TROP COURT (< 3s) !";
-        setTimeout(() => { resetHoldUI(); }, 1200);
+        document.getElementById('hold-stop-text').innerText = "TROP COURT (< 3s) !";
+        setTimeout(resetStopHoldUI, 1200);
       }
-      holdStartTime = 0;
+      holdStopStartTime = 0;
     }
 
-    function cancelHold() {
-      if (holdAnimFrame) cancelAnimationFrame(holdAnimFrame);
-      if (holdStartTime && !holdExpired) {
-        resetHoldUI();
+    function cancelHoldStop() {
+      if (holdStopAnimFrame) cancelAnimationFrame(holdStopAnimFrame);
+      if (holdStopStartTime && !holdStopExpired) resetStopHoldUI();
+      holdStopStartTime = 0;
+    }
+
+    function resetStopHoldUI() {
+      const pie = document.getElementById('camembert-stop-pie');
+      const statusTxt = document.getElementById('hold-stop-text');
+      if (pie) pie.style.background = `conic-gradient(#22c55e 0deg, rgba(255,255,255,0.25) 0deg)`;
+      if (statusTxt) statusTxt.innerText = "TERMINER SESSION (MAINTENIR 3s-5s)";
+    }
+
+    // --- SOS BUTTON LOGIC (3s) ---
+    function startHoldSos(e) {
+      if (!activeSession) return;
+      e.preventDefault();
+      holdSosStartTime = Date.now();
+
+      const pie = document.getElementById('camembert-sos-pie');
+      const statusTxt = document.getElementById('hold-sos-text');
+
+      function animate() {
+        const elapsed = Date.now() - holdSosStartTime;
+        if (elapsed < 3000) {
+          const deg = (elapsed / 3000) * 360;
+          pie.style.background = `conic-gradient(#ef4444 ${deg}deg, rgba(255,255,255,0.25) ${deg}deg)`;
+          statusTxt.innerText = `DÉTRESSE EN COURS (${(3 - elapsed/1000).toFixed(1)}s)...`;
+          holdSosAnimFrame = requestAnimationFrame(animate);
+        } else {
+          cancelAnimationFrame(holdSosAnimFrame);
+          pie.style.background = `conic-gradient(#ef4444 360deg, #ef4444 360deg)`;
+          statusTxt.innerText = "SIGNAL DÉTRESSE ENVOYÉ !";
+          triggerDistressAlert();
+        }
       }
-      holdStartTime = 0;
+      holdSosAnimFrame = requestAnimationFrame(animate);
     }
 
-    function resetHoldUI() {
-      const camembert = document.getElementById('camembert-pie');
-      const innerCircle = document.getElementById('camembert-inner');
-      const statusTxt = document.getElementById('hold-status-text');
-
-      if (camembert) camembert.style.background = `conic-gradient(#22c55e 0deg, rgba(255,255,255,0.25) 0deg)`;
-      if (innerCircle) innerCircle.style.backgroundColor = '#dc2626';
-      if (statusTxt) statusTxt.innerText = "MAINTENIR 3s À 5s POUR FINIR";
+    function endHoldSos() {
+      if (!holdSosStartTime) return;
+      const elapsed = Date.now() - holdSosStartTime;
+      cancelAnimationFrame(holdSosAnimFrame);
+      if (elapsed < 3000) {
+        document.getElementById('hold-sos-text').innerText = "SOS ANNULÉ (<3s)";
+        setTimeout(resetSosHoldUI, 1200);
+      }
+      holdSosStartTime = 0;
     }
 
+    function cancelHoldSos() {
+      if (holdSosAnimFrame) cancelAnimationFrame(holdSosAnimFrame);
+      resetSosHoldUI();
+      holdSosStartTime = 0;
+    }
+
+    function resetSosHoldUI() {
+      const pie = document.getElementById('camembert-sos-pie');
+      const statusTxt = document.getElementById('hold-sos-text');
+      if (pie) pie.style.background = `conic-gradient(#ef4444 0deg, rgba(255,255,255,0.25) 0deg)`;
+      if (statusTxt) statusTxt.innerText = "DÉTRESSE / SOS (MAINTENIR 3s)";
+    }
+
+    function triggerDistressAlert() {
+      if (!activeSession) return;
+      activeSession.isDistress = true;
+      document.getElementById('sos-active-banner').style.display = 'flex';
+      syncSessionToCloud();
+      alert("⚠️ ALERTE SOS ACTIVÉE !\nVotre position et signal de détresse sont désormais diffusés aux riders à proximité.");
+    }
+
+    function cancelDistress() {
+      if (!activeSession) return;
+      activeSession.isDistress = false;
+      document.getElementById('sos-active-banner').style.display = 'none';
+      resetSosHoldUI();
+      syncSessionToCloud();
+      alert("Signal de détresse annulé.");
+    }
+
+    // --- FIREBASE & GENERAL LOGIC ---
     function setupDefaultFirebaseInputs() {
       document.getElementById('firebase-url').value = DEFAULT_FIREBASE_CONFIG.databaseURL;
       document.getElementById('firebase-apikey').value = DEFAULT_FIREBASE_CONFIG.apiKey;
@@ -776,7 +834,7 @@
         }).catch(err => console.error("Error saving profile to DB:", err));
       }
 
-      if (showAlert) alert('Compte mémorisé avec succès ! Vos infos seront conservées.');
+      if (showAlert) alert('Compte mémorisé avec succès !');
     }
 
     function getTodayKey() {
@@ -858,11 +916,33 @@
       }
     }
 
-    function disableBackgroundAudio() {
-      if (audioCtx) {
-        audioCtx.close();
-        audioCtx = null;
+    function playEmergencySound() {
+      if (alarmInterval) return;
+      enableBackgroundAudio();
+
+      alarmInterval = setInterval(() => {
+        if (!audioCtx) return;
+        try {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(880, audioCtx.currentTime); // Note A5
+          osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.3); // Note A4
+          gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.3);
+        } catch(e) { console.warn("Alarm audio err", e); }
+      }, 500);
+    }
+
+    function stopEmergencySound() {
+      if (alarmInterval) {
+        clearInterval(alarmInterval);
+        alarmInterval = null;
       }
+      document.getElementById('proximity-alert-banner').style.display = 'none';
     }
 
     function initFirebaseAuto() {
@@ -935,7 +1015,8 @@
         totalDistance: 0,
         maxSpeed3s: 0,
         comment: '',
-        status: 'active'
+        status: 'active',
+        isDistress: false
       };
 
       if (currentPolylineGroup) currentPolylineGroup.clearLayers();
@@ -960,6 +1041,7 @@
       const timestamp = pos.timestamp || Date.now();
       let rawSpeed = pos.coords.speed ? (pos.coords.speed * 3.6) : 0;
 
+      currentMyPos = { lat, lng };
       const point = { lat, lng, time: timestamp, speed: rawSpeed };
 
       if (activeSession.points.length > 0) {
@@ -1045,6 +1127,7 @@
         totalDistance: activeSession.totalDistance,
         points: activeSession.points,
         status: activeSession.status,
+        isDistress: activeSession.isDistress || false,
         comment: activeSession.comment || ''
       };
 
@@ -1056,8 +1139,10 @@
 
       dbDailyRef.on('value', (snapshot) => {
         const data = snapshot.val() || {};
+        let hasNearbyEmergency = false;
+        let emergencyDist = 0;
+        let emergencyRiderName = "";
 
-        // Suppression des repères et tracés des sessions retirées
         Object.keys(activeRidersMarkers).forEach(id => {
           if (!data[id]) {
             liveCloudMap.removeLayer(activeRidersMarkers[id]);
@@ -1072,7 +1157,28 @@
         Object.values(data).forEach(sess => {
           if (!sess.lastPoint) return;
           renderRiderOnMap(sess);
+
+          // VERIFICATION PROXIMITE SOS (< 500 mètres)
+          if (sess.isDistress && sess.status === 'active' && sess.id !== activeSession?.id) {
+            if (currentMyPos) {
+              const distKm = calculateHaversineDistance(currentMyPos.lat, currentMyPos.lng, sess.lastPoint.lat, sess.lastPoint.lng);
+              if (distKm <= 0.5) { // 500m
+                hasNearbyEmergency = true;
+                emergencyDist = Math.round(distKm * 1000);
+                emergencyRiderName = sess.rider?.pseudo || "Un rider";
+              }
+            }
+          }
         });
+
+        // Déclenchement de l'alarme si détresse proche
+        if (hasNearbyEmergency) {
+          document.getElementById('proximity-alert-banner').style.display = 'flex';
+          document.getElementById('proximity-alert-text').innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> SOS : ${emergencyRiderName} en difficulté à ${emergencyDist}m !`;
+          playEmergencySound();
+        } else {
+          stopEmergencySound();
+        }
       });
     }
 
@@ -1083,14 +1189,28 @@
       const lng = sess.lastPoint.lng;
       const color = sess.sail?.color || '#38bdf8';
       const isActive = (sess.status === 'active');
-      const borderStyle = isActive ? '3px solid #22c55e' : '3px solid #94a3b8';
+      const isSos = sess.isDistress;
 
-      const customIcon = L.divIcon({
-        className: 'custom-rider-icon',
-        html: `<div style="background-color:${color}; width:24px; height:24px; border-radius:50%; border:${borderStyle}; box-shadow:0 0 8px rgba(0,0,0,0.5);"></div>`,
-        iconSize: [24, 24],
-        iconAnchor: [12, 12]
-      });
+      let customIcon;
+
+      if (isSos && isActive) {
+        // Icône de détresse clignotante avec triangle d'avertissement
+        customIcon = L.divIcon({
+          className: 'custom-sos-marker',
+          html: `<div class="sos-marker-container"><i class="fa-solid fa-triangle-exclamation" style="color:#fff; font-size:16px;"></i></div>`,
+          iconSize: [34, 34],
+          iconAnchor: [17, 17]
+        });
+      } else {
+        // Rond classique avec couleur de voile
+        const borderStyle = isActive ? '3px solid #22c55e' : '3px solid #94a3b8';
+        customIcon = L.divIcon({
+          className: 'custom-rider-icon',
+          html: `<div style="background-color:${color}; width:24px; height:24px; border-radius:50%; border:${borderStyle}; box-shadow:0 0 8px rgba(0,0,0,0.5);"></div>`,
+          iconSize: [24, 24],
+          iconAnchor: [12, 12]
+        });
+      }
 
       const boardInfo = (sess.board?.brand && sess.board.brand !== '-') ? `${sess.board.brand} ${sess.board.model !== '-' ? sess.board.model : ''}`.trim() : '';
       const sailInfo = (sess.sail?.brand && sess.sail.brand !== '-') ? `${sess.sail.brand}` : '';
@@ -1099,6 +1219,7 @@
 
       let popupContent = `
         <div style="color: #0f172a; font-family: sans-serif; font-size: 12px; line-height: 1.4; max-width: 220px;">
+          ${isSos ? `<div style="background:#ef4444; color:#fff; padding:4px; font-weight:bold; text-align:center; border-radius:4px; margin-bottom:6px;"><i class="fa-solid fa-triangle-exclamation"></i> SIGNAL DÉTRESSE !</div>` : ''}
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
             <strong style="font-size: 14px; color: #0284c7;">${sess.rider?.pseudo || 'Rider'}</strong>
             <span style="font-size:10px; padding:2px 6px; border-radius:10px; background:${isActive ? '#dcfce7; color:#15803d;' : '#f1f5f9; color:#475569;'}">${isActive ? 'EN DIRECT' : 'TERMINÉ'}</span>
@@ -1131,10 +1252,12 @@
 
       if (sess.points && sess.points.length > 1) {
         const latLngs = sess.points.map(p => [p.lat, p.lng]);
+        const polyColor = isSos ? '#ef4444' : color;
         if (dailySessionsPolylines[sess.id]) {
           dailySessionsPolylines[sess.id].setLatLngs(latLngs);
+          dailySessionsPolylines[sess.id].setStyle({ color: polyColor });
         } else {
-          const poly = L.polyline(latLngs, { color: color, weight: 3, opacity: 0.7 }).addTo(liveCloudMap);
+          const poly = L.polyline(latLngs, { color: polyColor, weight: 3, opacity: 0.7 }).addTo(liveCloudMap);
           dailySessionsPolylines[sess.id] = poly;
         }
       }
@@ -1143,11 +1266,12 @@
     function stopSession() {
       if (watchPositionId !== null) navigator.geolocation.clearWatch(watchPositionId);
       releaseWakeLock();
-      disableBackgroundAudio();
+      stopEmergencySound();
 
       const userComment = prompt("Saisis un commentaire sur ta session (conditions de vent, plan d'eau...) accessible aux autres riders :") || '';
       activeSession.comment = userComment;
       activeSession.status = 'completed';
+      activeSession.isDistress = false;
 
       const endTime = new Date();
       activeSession.endTime = endTime.getTime();
