@@ -311,7 +311,6 @@
     .popup-img-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px; }
     .popup-img-grid img { width: 100%; height: 70px; object-fit: cover; border-radius: 6px; }
 
-    /* Sos Marker Custom Animation */
     .sos-marker-container {
       position: relative;
       width: 34px;
@@ -639,6 +638,18 @@
 
       initHoldButtons();
 
+      // Déverrouillage systématique de l'AudioContext lors de n'importe quelle interaction utilisateur
+      const unlockAudio = () => {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+      };
+      window.addEventListener('pointerdown', unlockAudio, { passive: true });
+      window.addEventListener('touchstart', unlockAudio, { passive: true });
+
       document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible' && activeSession) {
           requestWakeLock();
@@ -902,33 +913,26 @@
       }
     }
 
-    function enableBackgroundAudio() {
-      try {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        gain.gain.value = 0.001;
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-      } catch(e) {
-        console.warn("WebAudio Warning:", e);
-      }
-    }
-
     function playEmergencySound() {
       if (alarmInterval) return;
-      enableBackgroundAudio();
+
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
 
       alarmInterval = setInterval(() => {
         if (!audioCtx) return;
         try {
+          if (audioCtx.state === 'suspended') audioCtx.resume();
           const osc = audioCtx.createOscillator();
           const gain = audioCtx.createGain();
           osc.type = 'sawtooth';
           osc.frequency.setValueAtTime(880, audioCtx.currentTime); // Note A5
           osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.3); // Note A4
-          gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+          gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
           osc.connect(gain);
           gain.connect(audioCtx.destination);
           osc.start();
@@ -992,7 +996,6 @@
     function startSession() {
       saveProfile(false);
       requestWakeLock();
-      enableBackgroundAudio();
 
       activeSession = {
         id: 'sess_' + Date.now(),
@@ -1194,7 +1197,6 @@
       let customIcon;
 
       if (isSos && isActive) {
-        // Icône de détresse clignotante avec triangle d'avertissement
         customIcon = L.divIcon({
           className: 'custom-sos-marker',
           html: `<div class="sos-marker-container"><i class="fa-solid fa-triangle-exclamation" style="color:#fff; font-size:16px;"></i></div>`,
@@ -1202,7 +1204,6 @@
           iconAnchor: [17, 17]
         });
       } else {
-        // Rond classique avec couleur de voile
         const borderStyle = isActive ? '3px solid #22c55e' : '3px solid #94a3b8';
         customIcon = L.divIcon({
           className: 'custom-rider-icon',
@@ -1216,6 +1217,7 @@
       const sailInfo = (sess.sail?.brand && sess.sail.brand !== '-') ? `${sess.sail.brand}` : '';
       const sailSizeInfo = (sess.sail?.size && sess.sail.size !== '-') ? `${sess.sail.size} m²` : '';
       const fullSailText = [sailInfo, sailSizeInfo].filter(Boolean).join(' ');
+      const riderWeight = sess.rider?.weight ? `${sess.rider.weight} kg` : '-';
 
       let popupContent = `
         <div style="color: #0f172a; font-family: sans-serif; font-size: 12px; line-height: 1.4; max-width: 220px;">
@@ -1224,6 +1226,7 @@
             <strong style="font-size: 14px; color: #0284c7;">${sess.rider?.pseudo || 'Rider'}</strong>
             <span style="font-size:10px; padding:2px 6px; border-radius:10px; background:${isActive ? '#dcfce7; color:#15803d;' : '#f1f5f9; color:#475569;'}">${isActive ? 'EN DIRECT' : 'TERMINÉ'}</span>
           </div>
+          <b>Poids :</b> ${riderWeight}<br/>
           <b>Sport :</b> ${sess.sport || 'Ride'}<br/>
           ${boardInfo ? `<b>Planche :</b> ${boardInfo}<br/>` : ''}
           ${fullSailText ? `<b>Voile / Aile :</b> ${fullSailText}<br/>` : ''}
