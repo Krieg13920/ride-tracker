@@ -212,9 +212,60 @@
     }
 
     .btn-primary { background: linear-gradient(135deg, #0284c7, #38bdf8); color: #fff; }
-    .btn-danger { background: linear-gradient(135deg, #dc2626, #ef4444); color: #fff; }
     .btn-secondary { background-color: #334155; color: var(--text-main); }
     .btn-purple { background: linear-gradient(135deg, #7c3aed, #a855f7); color: #fff; }
+
+    /* BOUTON AVEC MANIEMENT PAR PRESSION ET CAMEMBERT */
+    .btn-hold {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      background: linear-gradient(135deg, #dc2626, #ef4444);
+      color: #fff;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none; /* Empêche le défilement tactile pendant l'appui prolongé */
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn-hold:active {
+      transform: scale(0.98);
+    }
+
+    /* CAMEMBERT DE DÉCOMPTE */
+    .camembert-box {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: conic-gradient(#22c55e 0deg, rgba(255,255,255,0.25) 0deg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.05s linear;
+    }
+
+    .camembert-inner {
+      width: 18px;
+      height: 18px;
+      background-color: #dc2626;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      color: #fff;
+      transition: background-color 0.2s;
+    }
 
     .stats-grid {
       display: grid;
@@ -408,7 +459,7 @@
     <div id="tab-active-session" class="tab-content">
       <div class="notice-box">
         <i class="fa-solid fa-shield-halved"></i>
-        <span>Tracking GPS actif. Synchronisation directe à chaque mouvement.</span>
+        <span>Maintenir le bouton 3s à 5s puis relâcher pour terminer.</span>
       </div>
 
       <div class="stats-grid">
@@ -434,8 +485,14 @@
         <div id="active-map"></div>
       </div>
 
-      <button class="btn btn-danger" onclick="stopSession()">
-        <i class="fa-solid fa-square"></i> FINIR & EXPORTER GPX
+      <!-- BOUTON FINIR AVEC CAMEMBERT INTEGRÉ -->
+      <button id="btn-stop-session" class="btn-hold">
+        <div class="camembert-box" id="camembert-pie">
+          <div class="camembert-inner" id="camembert-inner">
+            <i class="fa-solid fa-stop" id="camembert-icon"></i>
+          </div>
+        </div>
+        <span id="hold-status-text">MAINTENIR 3s À 5s POUR FINIR</span>
       </button>
     </div>
 
@@ -443,7 +500,7 @@
     <div id="tab-live-map" class="tab-content">
       <div style="margin-bottom: 8px;">
         <p style="font-size: 0.8rem; color: var(--text-muted);">
-          <i class="fa-solid fa-users" style="color: var(--accent-blue);"></i> Riders en direct & sessions du jour (visibles jusqu'à minuit)
+          <i class="fa-solid fa-users" style="color: var(--accent-blue);"></i> Riders en direct & traces conservées jusqu'à minuit
         </p>
       </div>
       <div class="map-container" style="height: calc(100% - 35px);">
@@ -559,6 +616,8 @@
 
     let activeSession = null;
     let watchPositionId = null;
+    let wakeLockObj = null;
+    let audioCtx = null;
 
     let sessionMap = null;
     let liveCloudMap = null;
@@ -569,12 +628,13 @@
     let sailPhotoBase64 = "";
     let seaPhotoBase64 = "";
 
-    const silentAudio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
-    silentAudio.loop = true;
-
     let profile = null;
-    let dbLiveRef = null;
     let dbDailyRef = null;
+
+    // Variables pour la pression longue (3s - 5s)
+    let holdStartTime = 0;
+    let holdAnimFrame = null;
+    let holdExpired = false;
 
     window.addEventListener('DOMContentLoaded', () => {
       setupDefaultFirebaseInputs();
@@ -586,7 +646,105 @@
 
       document.getElementById('input-sail-photo').addEventListener('change', (e) => handleImageUpload(e, 'sail'));
       document.getElementById('input-sea-photo').addEventListener('change', (e) => handleImageUpload(e, 'sea'));
+
+      initHoldButton();
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && activeSession) {
+          requestWakeLock();
+          syncSessionToCloud();
+        }
+      });
     });
+
+    /* GESTION DU BOUTON PRESSION LONGUE (CAMEMBERT 3S-5S) */
+    function initHoldButton() {
+      const btn = document.getElementById('btn-stop-session');
+      if (!btn) return;
+
+      btn.addEventListener('pointerdown', startHold);
+      btn.addEventListener('pointerup', endHold);
+      btn.addEventListener('pointerleave', cancelHold);
+      btn.addEventListener('pointercancel', cancelHold);
+    }
+
+    function startHold(e) {
+      if (!activeSession) return;
+      e.preventDefault();
+      holdStartTime = Date.now();
+      holdExpired = false;
+
+      const camembert = document.getElementById('camembert-pie');
+      const innerCircle = document.getElementById('camembert-inner');
+      const statusTxt = document.getElementById('hold-status-text');
+
+      function animatePie() {
+        const elapsed = Date.now() - holdStartTime;
+
+        if (elapsed < 3000) {
+          // De 0 à 3 secondes : remplissage progressif du camembert (0 à 360°)
+          const pct = elapsed / 3000;
+          const deg = pct * 360;
+          camembert.style.background = `conic-gradient(#22c55e ${deg}deg, rgba(255,255,255,0.25) ${deg}deg)`;
+          innerCircle.style.backgroundColor = '#dc2626';
+          statusTxt.innerText = `MAINTENIR (${(3 - elapsed/1000).toFixed(1)}s)`;
+          holdAnimFrame = requestAnimationFrame(animatePie);
+        } else if (elapsed <= 5000) {
+          // Entre 3s et 5s : Zone de validation active
+          camembert.style.background = `conic-gradient(#22c55e 360deg, #22c55e 360deg)`;
+          innerCircle.style.backgroundColor = '#16a34a'; // Vert
+          statusTxt.innerText = "RELÂCHEZ POUR VALIDER !";
+          holdAnimFrame = requestAnimationFrame(animatePie);
+        } else {
+          // Plus de 5 secondes : Trop long -> Annulation automatique
+          holdExpired = true;
+          cancelAnimationFrame(holdAnimFrame);
+          camembert.style.background = `conic-gradient(#ef4444 360deg, #ef4444 360deg)`;
+          innerCircle.style.backgroundColor = '#991b1b';
+          statusTxt.innerText = "TROP LONG (>5s) ! ANNULÉ";
+          setTimeout(() => { resetHoldUI(); }, 1500);
+        }
+      }
+
+      holdAnimFrame = requestAnimationFrame(animatePie);
+    }
+
+    function endHold(e) {
+      if (!holdStartTime || holdExpired) return;
+      const elapsed = Date.now() - holdStartTime;
+      cancelAnimationFrame(holdAnimFrame);
+
+      const statusTxt = document.getElementById('hold-status-text');
+
+      if (elapsed >= 3000 && elapsed <= 5000) {
+        // Succès : Relâché entre 3s et 5s
+        resetHoldUI();
+        stopSession();
+      } else if (elapsed < 3000) {
+        // Trop court
+        statusTxt.innerText = "TROP COURT (< 3s) !";
+        setTimeout(() => { resetHoldUI(); }, 1200);
+      }
+      holdStartTime = 0;
+    }
+
+    function cancelHold() {
+      if (holdAnimFrame) cancelAnimationFrame(holdAnimFrame);
+      if (holdStartTime && !holdExpired) {
+        resetHoldUI();
+      }
+      holdStartTime = 0;
+    }
+
+    function resetHoldUI() {
+      const camembert = document.getElementById('camembert-pie');
+      const innerCircle = document.getElementById('camembert-inner');
+      const statusTxt = document.getElementById('hold-status-text');
+
+      if (camembert) camembert.style.background = `conic-gradient(#22c55e 0deg, rgba(255,255,255,0.25) 0deg)`;
+      if (innerCircle) innerCircle.style.backgroundColor = '#dc2626';
+      if (statusTxt) statusTxt.innerText = "MAINTENIR 3s À 5s POUR FINIR";
+    }
 
     function setupDefaultFirebaseInputs() {
       document.getElementById('firebase-url').value = DEFAULT_FIREBASE_CONFIG.databaseURL;
@@ -679,12 +837,41 @@
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(liveCloudMap);
     }
 
+    async function requestWakeLock() {
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLockObj = await navigator.wakeLock.request('screen');
+        }
+      } catch (err) {
+        console.warn("WakeLock Error:", err.message);
+      }
+    }
+
+    function releaseWakeLock() {
+      if (wakeLockObj !== null) {
+        wakeLockObj.release().then(() => { wakeLockObj = null; });
+      }
+    }
+
     function enableBackgroundAudio() {
-      silentAudio.play().catch(err => console.log("Audio play error:", err));
+      try {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        gain.gain.value = 0.001;
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+      } catch(e) {
+        console.warn("WebAudio Warning:", e);
+      }
     }
 
     function disableBackgroundAudio() {
-      silentAudio.pause();
+      if (audioCtx) {
+        audioCtx.close();
+        audioCtx = null;
+      }
     }
 
     function initFirebaseAuto() {
@@ -693,7 +880,6 @@
         if (!firebase.apps.length) {
           firebase.initializeApp(DEFAULT_FIREBASE_CONFIG);
         }
-        dbLiveRef = firebase.database().ref('live_sessions');
         dbDailyRef = firebase.database().ref('daily_sessions/' + getTodayKey());
         
         listenToCloudMap();
@@ -701,7 +887,7 @@
         firebase.database().ref('profiles/' + profile.id).set({
           ...profile,
           lastSeen: Date.now()
-        }).catch(e => console.warn("Firebase set profile warning:", e));
+        }).catch(e => console.warn("Firebase profile sync:", e));
       } catch (e) {
         console.error("Erreur Firebase:", e);
       }
@@ -734,6 +920,7 @@
 
     function startSession() {
       saveProfile(false);
+      requestWakeLock();
       enableBackgroundAudio();
 
       activeSession = {
@@ -756,7 +943,8 @@
         points: [],
         totalDistance: 0,
         maxSpeed3s: 0,
-        comment: ''
+        comment: '',
+        status: 'active'
       };
 
       if (currentPolylineGroup) currentPolylineGroup.clearLayers();
@@ -806,7 +994,6 @@
       calculateMaxSpeed3s();
       updateActiveSessionUI(point.speed);
 
-      // Synchro directe en tâche de fond à chaque point GPS
       syncSessionToCloud();
     }
 
@@ -850,7 +1037,7 @@
     }
 
     function syncSessionToCloud() {
-      if (!dbLiveRef || !activeSession) return;
+      if (!dbDailyRef || !activeSession) return;
       const lastPoint = activeSession.points.length > 0 ? activeSession.points[activeSession.points.length - 1] : null;
 
       const cloudData = {
@@ -866,54 +1053,42 @@
         maxSpeed3s: activeSession.maxSpeed3s,
         totalDistance: activeSession.totalDistance,
         points: activeSession.points,
-        status: 'active'
+        status: activeSession.status,
+        comment: activeSession.comment || ''
       };
 
-      dbLiveRef.child(activeSession.id).set(cloudData).catch(e => console.warn("Cloud sync error:", e));
+      dbDailyRef.child(activeSession.id).set(cloudData).catch(e => console.warn("Cloud sync error:", e));
     }
 
     function listenToCloudMap() {
-      if (!liveCloudMap) return;
+      if (!liveCloudMap || !dbDailyRef) return;
 
-      // 1. Écoute des riders en direct
-      if (dbLiveRef) {
-        dbLiveRef.on('value', (snapshot) => {
-          const data = snapshot.val() || {};
+      dbDailyRef.on('value', (snapshot) => {
+        const data = snapshot.val() || {};
 
-          Object.keys(activeRidersMarkers).forEach(id => {
-            if (!data[id]) {
-              liveCloudMap.removeLayer(activeRidersMarkers[id]);
-              delete activeRidersMarkers[id];
-            }
-          });
-
-          Object.values(data).forEach(riderSess => {
-            if (!riderSess.lastPoint) return;
-            renderRiderOnMap(riderSess, true);
-          });
+        Object.keys(activeRidersMarkers).forEach(id => {
+          if (!data[id]) {
+            liveCloudMap.removeLayer(activeRidersMarkers[id]);
+            delete activeRidersMarkers[id];
+          }
         });
-      }
 
-      // 2. Écoute des sessions terminées de la journée (gardées jusqu'à minuit)
-      if (dbDailyRef) {
-        dbDailyRef.on('value', (snapshot) => {
-          const data = snapshot.val() || {};
-          Object.values(data).forEach(completedSess => {
-            renderRiderOnMap(completedSess, false);
-          });
+        Object.values(data).forEach(sess => {
+          if (!sess.lastPoint) return;
+          renderRiderOnMap(sess);
         });
-      }
+      });
     }
 
-    function renderRiderOnMap(sess, isActive) {
+    function renderRiderOnMap(sess) {
       if (!sess.lastPoint || !liveCloudMap) return;
 
       const lat = sess.lastPoint.lat;
       const lng = sess.lastPoint.lng;
       const color = sess.sail?.color || '#38bdf8';
-      const markerKey = (isActive ? 'live_' : 'daily_') + sess.id;
-
+      const isActive = (sess.status === 'active');
       const borderStyle = isActive ? '3px solid #22c55e' : '3px solid #94a3b8';
+
       const customIcon = L.divIcon({
         className: 'custom-rider-icon',
         html: `<div style="background-color:${color}; width:24px; height:24px; border-radius:50%; border:${borderStyle}; box-shadow:0 0 8px rgba(0,0,0,0.5);"></div>`,
@@ -928,7 +1103,7 @@
 
       let popupContent = `
         <div style="color: #0f172a; font-family: sans-serif; font-size: 12px; line-height: 1.4; max-width: 220px;">
-          <div style="display:flex; justify-style:space-between; align-items:center; margin-bottom:4px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
             <strong style="font-size: 14px; color: #0284c7;">${sess.rider?.pseudo || 'Rider'}</strong>
             <span style="font-size:10px; padding:2px 6px; border-radius:10px; background:${isActive ? '#dcfce7; color:#15803d;' : '#f1f5f9; color:#475569;'}">${isActive ? 'EN DIRECT' : 'TERMINÉ'}</span>
           </div>
@@ -948,29 +1123,35 @@
         </div>
       `;
 
-      if (activeRidersMarkers[markerKey]) {
-        activeRidersMarkers[markerKey].setLatLng([lat, lng]);
-        activeRidersMarkers[markerKey].getPopup().setContent(popupContent);
+      if (activeRidersMarkers[sess.id]) {
+        activeRidersMarkers[sess.id].setLatLng([lat, lng]);
+        activeRidersMarkers[sess.id].setIcon(customIcon);
+        activeRidersMarkers[sess.id].getPopup().setContent(popupContent);
       } else {
         const marker = L.marker([lat, lng], { icon: customIcon }).addTo(liveCloudMap);
         marker.bindPopup(popupContent);
-        activeRidersMarkers[markerKey] = marker;
+        activeRidersMarkers[sess.id] = marker;
       }
 
-      // Dessiner la trace complète pour les sessions terminées de la journée
-      if (!isActive && sess.points && sess.points.length > 1 && !dailySessionsPolylines[sess.id]) {
+      if (sess.points && sess.points.length > 1) {
         const latLngs = sess.points.map(p => [p.lat, p.lng]);
-        const poly = L.polyline(latLngs, { color: color, weight: 3, opacity: 0.6, dashArray: '4, 8' }).addTo(liveCloudMap);
-        dailySessionsPolylines[sess.id] = poly;
+        if (dailySessionsPolylines[sess.id]) {
+          dailySessionsPolylines[sess.id].setLatLngs(latLngs);
+        } else {
+          const poly = L.polyline(latLngs, { color: color, weight: 3, opacity: 0.7 }).addTo(liveCloudMap);
+          dailySessionsPolylines[sess.id] = poly;
+        }
       }
     }
 
     function stopSession() {
       if (watchPositionId !== null) navigator.geolocation.clearWatch(watchPositionId);
+      releaseWakeLock();
       disableBackgroundAudio();
 
       const userComment = prompt("Saisis un commentaire sur ta session (conditions de vent, plan d'eau...) accessible aux autres riders :") || '';
       activeSession.comment = userComment;
+      activeSession.status = 'completed';
 
       const endTime = new Date();
       activeSession.endTime = endTime.getTime();
@@ -980,24 +1161,13 @@
       const secs = Math.floor((durationMs % 60000) / 1000).toString().padStart(2, '0');
       activeSession.durationFormatted = `${hrs}:${mins}:${secs}`;
 
-      // Sauvegarde dans l'historique local
       saveSessionToHistory(activeSession);
-
-      // Transfert du direct vers les sessions terminées du jour dans Firebase
-      if (dbLiveRef) dbLiveRef.child(activeSession.id).remove();
-      if (dbDailyRef) {
-        dbDailyRef.child(activeSession.id).set({
-          ...activeSession,
-          lastPoint: activeSession.points[activeSession.points.length - 1],
-          lastUpdated: Date.now(),
-          status: 'completed'
-        });
-      }
+      syncSessionToCloud();
 
       const gpxContent = generateGPX(activeSession);
       downloadGPX(gpxContent, `session_${activeSession.sport}_${Date.now()}.gpx`);
 
-      alert(`Session terminée et enregistrée !\n\nDurée : ${activeSession.durationFormatted}\nDistance : ${activeSession.totalDistance.toFixed(2)} km\nVitesse Max (3s) : ${activeSession.maxSpeed3s.toFixed(1)} km/h`);
+      alert(`Session terminée !\n\nDurée : ${activeSession.durationFormatted}\nDistance : ${activeSession.totalDistance.toFixed(2)} km\nVitesse Max (3s) : ${activeSession.maxSpeed3s.toFixed(1)} km/h`);
 
       activeSession = null;
       renderHistory();
@@ -1047,7 +1217,7 @@
     function fetchAdminData() {
       const container = document.getElementById('admin-users-list');
       if (typeof firebase === 'undefined' || !firebase.apps || !firebase.apps.length) {
-        container.innerHTML = `<p style="font-size: 0.85rem; color: var(--accent-red);">Firebase non configuré. Vérifie la clé API et l'URL dans le fichier.</p>`;
+        container.innerHTML = `<p style="font-size: 0.85rem; color: var(--accent-red);">Firebase non configuré.</p>`;
         return;
       }
 
@@ -1058,7 +1228,7 @@
         const keys = Object.keys(users);
 
         if (keys.length === 0) {
-          container.innerHTML = `<p style="font-size: 0.85rem; color: var(--text-muted);">Aucun utilisateur enregistré dans la base de données.</p>`;
+          container.innerHTML = `<p style="font-size: 0.85rem; color: var(--text-muted);">Aucun utilisateur enregistré.</p>`;
           return;
         }
 
@@ -1078,7 +1248,7 @@
           `;
         }).join('');
       }).catch(err => {
-        container.innerHTML = `<p style="font-size: 0.85rem; color: var(--accent-red);">Erreur d'accès Firebase: ${err.message}</p>`;
+        container.innerHTML = `<p style="font-size: 0.85rem; color: var(--accent-red);">Erreur: ${err.message}</p>`;
       });
     }
 
