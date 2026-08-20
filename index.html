@@ -301,6 +301,21 @@
       cursor: pointer;
       background: none;
     }
+
+    .popup-img-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .popup-img-grid img {
+      width: 100%;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+    }
   </style>
 
   <!-- Firebase SDKs -->
@@ -314,7 +329,7 @@
   <!-- Header -->
   <header>
     <h1><i class="fa-solid fa-water"></i> RiderTracker</h1>
-    <span class="badge-live" id="live-indicator"><i class="fa-solid fa-circle"></i> LIVE 15S</span>
+    <span class="badge-live" id="live-indicator"><i class="fa-solid fa-circle"></i> LIVE GPS</span>
   </header>
 
   <!-- Main Body Content -->
@@ -372,9 +387,15 @@
           </div>
         </div>
 
-        <div class="form-group">
-          <label>Photo du matos (optionnel)</label>
-          <input type="file" id="input-sail-photo" accept="image/*" class="form-control">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Photo Voile/Aile</label>
+            <input type="file" id="input-sail-photo" accept="image/*" class="form-control">
+          </div>
+          <div class="form-group">
+            <label>Photo Mer / Vagues</label>
+            <input type="file" id="input-sea-photo" accept="image/*" class="form-control">
+          </div>
         </div>
 
         <button class="btn btn-primary" onclick="startSession()">
@@ -387,7 +408,7 @@
     <div id="tab-active-session" class="tab-content">
       <div class="notice-box">
         <i class="fa-solid fa-shield-halved"></i>
-        <span>Tracking en tâche de fond actif. Tu peux verrouiller ton écran.</span>
+        <span>Tracking GPS actif. Synchronisation directe à chaque mouvement.</span>
       </div>
 
       <div class="stats-grid">
@@ -418,11 +439,11 @@
       </button>
     </div>
 
-    <!-- TAB 3: CARTE EN DIRECT (SOL) -->
+    <!-- TAB 3: CARTE EN DIRECT ET SESSIONS DU JOUR -->
     <div id="tab-live-map" class="tab-content">
       <div style="margin-bottom: 8px;">
         <p style="font-size: 0.8rem; color: var(--text-muted);">
-          <i class="fa-solid fa-users" style="color: var(--accent-blue);"></i> Riders connectés en direct (mises à jour / 15s)
+          <i class="fa-solid fa-users" style="color: var(--accent-blue);"></i> Riders en direct & sessions du jour (visibles jusqu'à minuit)
         </p>
       </div>
       <div class="map-container" style="height: calc(100% - 35px);">
@@ -440,13 +461,17 @@
       </div>
     </div>
 
-    <!-- TAB 5: PROFIL / CONFIG FIREBASE -->
+    <!-- TAB 5: PROFIL / COMPTE PERMANENT -->
     <div id="tab-profile" class="tab-content">
       <div class="card">
-        <h2><i class="fa-solid fa-user"></i> Mon Profil Rider</h2>
+        <h2><i class="fa-solid fa-id-card" style="color: var(--accent-blue);"></i> Mon Compte Rider</h2>
+        <div class="form-group">
+          <label>Identifiant Unique (Rider ID)</label>
+          <input type="text" id="profile-id" class="form-control" readonly style="opacity: 0.7;">
+        </div>
         <div class="form-group">
           <label>Pseudo / Nom</label>
-          <input type="text" id="profile-pseudo" class="form-control" placeholder="Rider Anonyme">
+          <input type="text" id="profile-pseudo" class="form-control" placeholder="Mon Pseudo">
         </div>
         <div class="form-row">
           <div class="form-group">
@@ -458,16 +483,13 @@
             <input type="number" id="profile-height" class="form-control" placeholder="180">
           </div>
         </div>
-        <button class="btn btn-secondary" onclick="saveProfile()">
-          <i class="fa-solid fa-floppy-disk"></i> Enregistrer mon profil
+        <button class="btn btn-secondary" onclick="saveProfile(true)">
+          <i class="fa-solid fa-floppy-disk"></i> Mémoriser mes informations
         </button>
       </div>
 
       <div class="card">
-        <h2><i class="fa-solid fa-fire" style="color: #f97316;"></i> Réseau Firebase (Fixe)</h2>
-        <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px;">
-          Configuration réseau globale partagée par tous les utilisateurs de l'application.
-        </p>
+        <h2><i class="fa-solid fa-fire" style="color: #f97316;"></i> Connexion Réseau</h2>
         <div class="form-group">
           <label>Database URL</label>
           <input type="text" id="firebase-url" class="form-control" readonly>
@@ -484,7 +506,7 @@
       <div class="card">
         <h2><i class="fa-solid fa-user-shield" style="color: var(--accent-purple);"></i> Administration & Communauté</h2>
         <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">
-          Liste des utilisateurs et des sessions enregistrées dans Firebase.
+          Comptes utilisateurs et activités enregistrées dans Firebase.
         </p>
         <button class="btn btn-purple" onclick="fetchAdminData()" style="margin-bottom: 12px;">
           <i class="fa-solid fa-rotate"></i> Rafraîchir les profils
@@ -537,36 +559,80 @@
 
     let activeSession = null;
     let watchPositionId = null;
-    let cloudSyncTimer = null;
-    const SYNC_INTERVAL_MS = 15 * 1000;
 
     let sessionMap = null;
     let liveCloudMap = null;
     let currentPolylineGroup = null;
     let activeRidersMarkers = {};
+    let dailySessionsPolylines = {};
+
     let sailPhotoBase64 = "";
+    let seaPhotoBase64 = "";
 
     const silentAudio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
     silentAudio.loop = true;
 
-    let profile = { id: 'usr_' + Math.random().toString(36).substr(2, 9), pseudo: 'Rider Anonyme', weight: '', height: '' };
-    let dbRef = null;
+    let profile = null;
+    let dbLiveRef = null;
+    let dbDailyRef = null;
 
     window.addEventListener('DOMContentLoaded', () => {
       setupDefaultFirebaseInputs();
-      loadProfile();
+      initAccountProfile();
       
       try { initFirebaseAuto(); } catch(e) { console.warn("Firebase Init Exception:", e); }
       try { initMaps(); } catch(e) { console.warn("Maps Init Exception:", e); }
       try { renderHistory(); } catch(e) { console.warn("History Init Exception:", e); }
 
-      const photoInput = document.getElementById('input-sail-photo');
-      if (photoInput) photoInput.addEventListener('change', handleImageUpload);
+      document.getElementById('input-sail-photo').addEventListener('change', (e) => handleImageUpload(e, 'sail'));
+      document.getElementById('input-sea-photo').addEventListener('change', (e) => handleImageUpload(e, 'sea'));
     });
 
     function setupDefaultFirebaseInputs() {
       document.getElementById('firebase-url').value = DEFAULT_FIREBASE_CONFIG.databaseURL;
       document.getElementById('firebase-apikey').value = DEFAULT_FIREBASE_CONFIG.apiKey;
+    }
+
+    function initAccountProfile() {
+      const saved = localStorage.getItem('rider_account');
+      if (saved) {
+        profile = JSON.parse(saved);
+      } else {
+        profile = {
+          id: 'rider_' + Math.random().toString(36).substr(2, 9),
+          pseudo: 'Rider ' + Math.floor(1000 + Math.random() * 9000),
+          weight: '',
+          height: ''
+        };
+        localStorage.setItem('rider_account', JSON.stringify(profile));
+      }
+
+      document.getElementById('profile-id').value = profile.id;
+      document.getElementById('profile-pseudo').value = profile.pseudo || '';
+      document.getElementById('profile-weight').value = profile.weight || '';
+      document.getElementById('profile-height').value = profile.height || '';
+    }
+
+    function saveProfile(showAlert = false) {
+      profile.pseudo = document.getElementById('profile-pseudo').value.trim() || 'Rider Anonyme';
+      profile.weight = document.getElementById('profile-weight').value || '';
+      profile.height = document.getElementById('profile-height').value || '';
+      
+      localStorage.setItem('rider_account', JSON.stringify(profile));
+
+      if (firebase.apps && firebase.apps.length) {
+        firebase.database().ref('profiles/' + profile.id).set({
+          ...profile,
+          lastSeen: Date.now()
+        }).catch(err => console.error("Error saving profile to DB:", err));
+      }
+
+      if (showAlert) alert('Compte mémorisé avec succès ! Vos infos seront conservées.');
+    }
+
+    function getTodayKey() {
+      const d = new Date();
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
     }
 
     function switchTab(tabId, btnElement) {
@@ -621,41 +687,16 @@
       silentAudio.pause();
     }
 
-    function saveProfile() {
-      profile.pseudo = document.getElementById('profile-pseudo').value || 'Rider Anonyme';
-      profile.weight = document.getElementById('profile-weight').value || '';
-      profile.height = document.getElementById('profile-height').value || '';
-      localStorage.setItem('rider_profile', JSON.stringify(profile));
-
-      if (firebase.apps && firebase.apps.length) {
-        firebase.database().ref('profiles/' + profile.id).set({
-          ...profile,
-          lastSeen: Date.now()
-        }).catch(err => console.error("Error saving profile:", err));
-      }
-
-      alert('Profil enregistré avec succès !');
-    }
-
-    function loadProfile() {
-      const saved = localStorage.getItem('rider_profile');
-      if (saved) {
-        profile = JSON.parse(saved);
-        if (!profile.id) profile.id = 'usr_' + Math.random().toString(36).substr(2, 9);
-        document.getElementById('profile-pseudo').value = profile.pseudo || '';
-        document.getElementById('profile-weight').value = profile.weight || '';
-        document.getElementById('profile-height').value = profile.height || '';
-      }
-    }
-
     function initFirebaseAuto() {
       if (typeof firebase === 'undefined') return;
       try {
         if (!firebase.apps.length) {
           firebase.initializeApp(DEFAULT_FIREBASE_CONFIG);
         }
-        dbRef = firebase.database().ref('live_sessions');
-        listenToLiveSessions();
+        dbLiveRef = firebase.database().ref('live_sessions');
+        dbDailyRef = firebase.database().ref('daily_sessions/' + getTodayKey());
+        
+        listenToCloudMap();
 
         firebase.database().ref('profiles/' + profile.id).set({
           ...profile,
@@ -666,7 +707,7 @@
       }
     }
 
-    function handleImageUpload(e) {
+    function handleImageUpload(e, targetType) {
       const file = e.target.files[0];
       if (file) {
         const reader = new FileReader();
@@ -680,7 +721,10 @@
             canvas.height = img.height * scaleSize;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            sailPhotoBase64 = canvas.toDataURL('image/jpeg', 0.7);
+            
+            const compressed = canvas.toDataURL('image/jpeg', 0.65);
+            if (targetType === 'sail') sailPhotoBase64 = compressed;
+            if (targetType === 'sea') seaPhotoBase64 = compressed;
           };
           img.src = reader.result;
         };
@@ -689,13 +733,13 @@
     }
 
     function startSession() {
+      saveProfile(false);
       enableBackgroundAudio();
-      const pseudo = profile.pseudo || document.getElementById('profile-pseudo').value || 'Rider Anonyme';
 
       activeSession = {
         id: 'sess_' + Date.now(),
         startTime: new Date().getTime(),
-        rider: { id: profile.id, pseudo, weight: profile.weight, height: profile.height },
+        rider: { id: profile.id, pseudo: profile.pseudo, weight: profile.weight, height: profile.height },
         sport: document.getElementById('input-sport').value,
         board: {
           brand: document.getElementById('board-brand').value || '-',
@@ -707,10 +751,12 @@
           color: document.getElementById('sail-color').value,
           photo: sailPhotoBase64
         },
+        seaPhoto: seaPhotoBase64,
         windSpeed: document.getElementById('input-wind-speed').value || '-',
         points: [],
         totalDistance: 0,
-        maxSpeed3s: 0
+        maxSpeed3s: 0,
+        comment: ''
       };
 
       if (currentPolylineGroup) currentPolylineGroup.clearLayers();
@@ -727,8 +773,6 @@
       }
 
       syncSessionToCloud();
-      if (cloudSyncTimer) clearInterval(cloudSyncTimer);
-      cloudSyncTimer = setInterval(() => { syncSessionToCloud(); }, SYNC_INTERVAL_MS);
     }
 
     function handleGPSUpdate(pos) {
@@ -761,6 +805,9 @@
 
       calculateMaxSpeed3s();
       updateActiveSessionUI(point.speed);
+
+      // Synchro directe en tâche de fond à chaque point GPS
+      syncSessionToCloud();
     }
 
     function handleGPSError(err) {
@@ -803,7 +850,7 @@
     }
 
     function syncSessionToCloud() {
-      if (!dbRef || !activeSession) return;
+      if (!dbLiveRef || !activeSession) return;
       const lastPoint = activeSession.points.length > 0 ? activeSession.points[activeSession.points.length - 1] : null;
 
       const cloudData = {
@@ -812,87 +859,118 @@
         sport: activeSession.sport,
         board: activeSession.board,
         sail: activeSession.sail,
+        seaPhoto: activeSession.seaPhoto,
         windSpeed: activeSession.windSpeed,
         lastUpdated: Date.now(),
         lastPoint: lastPoint,
         maxSpeed3s: activeSession.maxSpeed3s,
-        totalDistance: activeSession.totalDistance
+        totalDistance: activeSession.totalDistance,
+        points: activeSession.points,
+        status: 'active'
       };
 
-      dbRef.child(activeSession.id).set(cloudData).catch(e => console.warn("Cloud sync error:", e));
+      dbLiveRef.child(activeSession.id).set(cloudData).catch(e => console.warn("Cloud sync error:", e));
     }
 
-    function removeSessionFromCloud(sessionId) {
-      if (dbRef && sessionId) {
-        dbRef.child(sessionId).remove().catch(e => console.warn("Cloud remove error:", e));
+    function listenToCloudMap() {
+      if (!liveCloudMap) return;
+
+      // 1. Écoute des riders en direct
+      if (dbLiveRef) {
+        dbLiveRef.on('value', (snapshot) => {
+          const data = snapshot.val() || {};
+
+          Object.keys(activeRidersMarkers).forEach(id => {
+            if (!data[id]) {
+              liveCloudMap.removeLayer(activeRidersMarkers[id]);
+              delete activeRidersMarkers[id];
+            }
+          });
+
+          Object.values(data).forEach(riderSess => {
+            if (!riderSess.lastPoint) return;
+            renderRiderOnMap(riderSess, true);
+          });
+        });
+      }
+
+      // 2. Écoute des sessions terminées de la journée (gardées jusqu'à minuit)
+      if (dbDailyRef) {
+        dbDailyRef.on('value', (snapshot) => {
+          const data = snapshot.val() || {};
+          Object.values(data).forEach(completedSess => {
+            renderRiderOnMap(completedSess, false);
+          });
+        });
       }
     }
 
-    function listenToLiveSessions() {
-      if (!dbRef) return;
+    function renderRiderOnMap(sess, isActive) {
+      if (!sess.lastPoint || !liveCloudMap) return;
 
-      dbRef.on('value', (snapshot) => {
-        const data = snapshot.val() || {};
+      const lat = sess.lastPoint.lat;
+      const lng = sess.lastPoint.lng;
+      const color = sess.sail?.color || '#38bdf8';
+      const markerKey = (isActive ? 'live_' : 'daily_') + sess.id;
 
-        Object.keys(activeRidersMarkers).forEach(id => {
-          if (!data[id] && liveCloudMap) {
-            liveCloudMap.removeLayer(activeRidersMarkers[id]);
-            delete activeRidersMarkers[id];
-          }
-        });
-
-        Object.values(data).forEach(riderSess => {
-          if (!riderSess.lastPoint || !liveCloudMap) return;
-
-          const lat = riderSess.lastPoint.lat;
-          const lng = riderSess.lastPoint.lng;
-          const color = riderSess.sail?.color || '#38bdf8';
-
-          const customIcon = L.divIcon({
-            className: 'custom-rider-icon',
-            html: `<div style="background-color:${color}; width:24px; height:24px; border-radius:50%; border:3px solid white; box-shadow:0 0 8px rgba(0,0,0,0.5);"></div>`,
-            iconSize: [24, 24],
-            iconAnchor: [12, 12]
-          });
-
-          const boardInfo = (riderSess.board?.brand && riderSess.board.brand !== '-') ? `${riderSess.board.brand} ${riderSess.board.model !== '-' ? riderSess.board.model : ''}`.trim() : '';
-          const sailInfo = (riderSess.sail?.brand && riderSess.sail.brand !== '-') ? `${riderSess.sail.brand}` : '';
-          const sailSizeInfo = (riderSess.sail?.size && riderSess.sail.size !== '-') ? `${riderSess.sail.size} m²` : '';
-          const fullSailText = [sailInfo, sailSizeInfo].filter(Boolean).join(' ');
-
-          const popupContent = `
-            <div style="color: #0f172a; font-family: sans-serif; font-size: 12px; line-height: 1.4;">
-              <strong style="font-size: 14px; color: #0284c7;">${riderSess.rider?.pseudo || 'Rider'}</strong> (${riderSess.sport || 'Ride'})<br/>
-              ${boardInfo ? `<b>Planche :</b> ${boardInfo}<br/>` : ''}
-              ${fullSailText ? `<b>Voile / Aile :</b> ${fullSailText}<br/>` : ''}
-              ${(riderSess.windSpeed && riderSess.windSpeed !== '-') ? `<b>Vent estimé :</b> ${riderSess.windSpeed} kts<br/>` : ''}
-              <b>Vmax 3s :</b> ${riderSess.maxSpeed3s ? riderSess.maxSpeed3s.toFixed(1) : 0} km/h<br/>
-              <b>Distance :</b> ${riderSess.totalDistance ? riderSess.totalDistance.toFixed(2) : 0} km<br/>
-              ${riderSess.sail?.photo ? `<img src="${riderSess.sail.photo}" style="width:100%; border-radius:8px; margin-top:6px; max-height:120px; object-fit:cover; display:block;"/>` : ''}
-              <div style="color:#64748b; font-size: 10px; margin-top:4px;">Maj : ${new Date(riderSess.lastUpdated).toLocaleTimeString()}</div>
-            </div>
-          `;
-
-          if (activeRidersMarkers[riderSess.id]) {
-            activeRidersMarkers[riderSess.id].setLatLng([lat, lng]);
-            activeRidersMarkers[riderSess.id].getPopup().setContent(popupContent);
-          } else {
-            const marker = L.marker([lat, lng], { icon: customIcon }).addTo(liveCloudMap);
-            marker.bindPopup(popupContent);
-            activeRidersMarkers[riderSess.id] = marker;
-          }
-        });
+      const borderStyle = isActive ? '3px solid #22c55e' : '3px solid #94a3b8';
+      const customIcon = L.divIcon({
+        className: 'custom-rider-icon',
+        html: `<div style="background-color:${color}; width:24px; height:24px; border-radius:50%; border:${borderStyle}; box-shadow:0 0 8px rgba(0,0,0,0.5);"></div>`,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
       });
+
+      const boardInfo = (sess.board?.brand && sess.board.brand !== '-') ? `${sess.board.brand} ${sess.board.model !== '-' ? sess.board.model : ''}`.trim() : '';
+      const sailInfo = (sess.sail?.brand && sess.sail.brand !== '-') ? `${sess.sail.brand}` : '';
+      const sailSizeInfo = (sess.sail?.size && sess.sail.size !== '-') ? `${sess.sail.size} m²` : '';
+      const fullSailText = [sailInfo, sailSizeInfo].filter(Boolean).join(' ');
+
+      let popupContent = `
+        <div style="color: #0f172a; font-family: sans-serif; font-size: 12px; line-height: 1.4; max-width: 220px;">
+          <div style="display:flex; justify-style:space-between; align-items:center; margin-bottom:4px;">
+            <strong style="font-size: 14px; color: #0284c7;">${sess.rider?.pseudo || 'Rider'}</strong>
+            <span style="font-size:10px; padding:2px 6px; border-radius:10px; background:${isActive ? '#dcfce7; color:#15803d;' : '#f1f5f9; color:#475569;'}">${isActive ? 'EN DIRECT' : 'TERMINÉ'}</span>
+          </div>
+          <b>Sport :</b> ${sess.sport || 'Ride'}<br/>
+          ${boardInfo ? `<b>Planche :</b> ${boardInfo}<br/>` : ''}
+          ${fullSailText ? `<b>Voile / Aile :</b> ${fullSailText}<br/>` : ''}
+          ${(sess.windSpeed && sess.windSpeed !== '-') ? `<b>Vent :</b> ${sess.windSpeed} kts<br/>` : ''}
+          <b>Vmax 3s :</b> <span style="color:#f97316; font-weight:bold;">${sess.maxSpeed3s ? sess.maxSpeed3s.toFixed(1) : 0} km/h</span><br/>
+          <b>Distance :</b> ${sess.totalDistance ? sess.totalDistance.toFixed(2) : 0} km<br/>
+          ${sess.comment ? `<div style="background:#f8fafc; border-left:3px solid #38bdf8; padding:4px 6px; margin:4px 0; font-style:italic;">« ${sess.comment} »</div>` : ''}
+          
+          <div class="popup-img-grid">
+            ${sess.sail?.photo ? `<div><small style="font-size:9px;">Voile</small><img src="${sess.sail.photo}"/></div>` : ''}
+            ${sess.seaPhoto ? `<div><small style="font-size:9px;">Mer / Vagues</small><img src="${sess.seaPhoto}"/></div>` : ''}
+          </div>
+          <div style="color:#64748b; font-size: 10px; margin-top:4px;">Maj : ${new Date(sess.lastUpdated).toLocaleTimeString()}</div>
+        </div>
+      `;
+
+      if (activeRidersMarkers[markerKey]) {
+        activeRidersMarkers[markerKey].setLatLng([lat, lng]);
+        activeRidersMarkers[markerKey].getPopup().setContent(popupContent);
+      } else {
+        const marker = L.marker([lat, lng], { icon: customIcon }).addTo(liveCloudMap);
+        marker.bindPopup(popupContent);
+        activeRidersMarkers[markerKey] = marker;
+      }
+
+      // Dessiner la trace complète pour les sessions terminées de la journée
+      if (!isActive && sess.points && sess.points.length > 1 && !dailySessionsPolylines[sess.id]) {
+        const latLngs = sess.points.map(p => [p.lat, p.lng]);
+        const poly = L.polyline(latLngs, { color: color, weight: 3, opacity: 0.6, dashArray: '4, 8' }).addTo(liveCloudMap);
+        dailySessionsPolylines[sess.id] = poly;
+      }
     }
 
     function stopSession() {
       if (watchPositionId !== null) navigator.geolocation.clearWatch(watchPositionId);
       disableBackgroundAudio();
 
-      if (cloudSyncTimer) {
-        clearInterval(cloudSyncTimer);
-        cloudSyncTimer = null;
-      }
+      const userComment = prompt("Saisis un commentaire sur ta session (conditions de vent, plan d'eau...) accessible aux autres riders :") || '';
+      activeSession.comment = userComment;
 
       const endTime = new Date();
       activeSession.endTime = endTime.getTime();
@@ -902,13 +980,24 @@
       const secs = Math.floor((durationMs % 60000) / 1000).toString().padStart(2, '0');
       activeSession.durationFormatted = `${hrs}:${mins}:${secs}`;
 
+      // Sauvegarde dans l'historique local
       saveSessionToHistory(activeSession);
-      removeSessionFromCloud(activeSession.id);
+
+      // Transfert du direct vers les sessions terminées du jour dans Firebase
+      if (dbLiveRef) dbLiveRef.child(activeSession.id).remove();
+      if (dbDailyRef) {
+        dbDailyRef.child(activeSession.id).set({
+          ...activeSession,
+          lastPoint: activeSession.points[activeSession.points.length - 1],
+          lastUpdated: Date.now(),
+          status: 'completed'
+        });
+      }
 
       const gpxContent = generateGPX(activeSession);
       downloadGPX(gpxContent, `session_${activeSession.sport}_${Date.now()}.gpx`);
 
-      alert(`Session terminée !\n\nDurée : ${activeSession.durationFormatted}\nDistance : ${activeSession.totalDistance.toFixed(2)} km\nVitesse Max (3s) : ${activeSession.maxSpeed3s.toFixed(1)} km/h`);
+      alert(`Session terminée et enregistrée !\n\nDurée : ${activeSession.durationFormatted}\nDistance : ${activeSession.totalDistance.toFixed(2)} km\nVitesse Max (3s) : ${activeSession.maxSpeed3s.toFixed(1)} km/h`);
 
       activeSession = null;
       renderHistory();
@@ -937,6 +1026,7 @@
             <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">
               Vmax 3s: <b>${s.maxSpeed3s ? s.maxSpeed3s.toFixed(1) : 0} km/h</b> | Distance: ${s.totalDistance.toFixed(2)} km
             </p>
+            ${s.comment ? `<p style="font-size:0.7rem; color: var(--accent-orange); margin-top:2px;"><i>« ${s.comment} »</i></p>` : ''}
           </div>
           <button class="btn btn-secondary" style="width: auto; padding: 6px 10px; font-size: 0.75rem;" onclick="reDownloadGPX(${idx})">
             <i class="fa-solid fa-download"></i> GPX
